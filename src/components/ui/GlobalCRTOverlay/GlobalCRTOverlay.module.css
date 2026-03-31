@@ -1,0 +1,106 @@
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+.content {
+  position: relative;
+  flex: 1;
+  z-index: 1;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.08),
+    rgba(0, 255, 0, 0.05),
+    rgba(0, 0, 255, 0.08)
+  );
+  background-size: 100% 2px, 3px 100%;
+}
+
+.vignette {
+  background: radial-gradient(
+    circle,
+    transparent 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+}
+
+.flicker {
+  background: rgba(18, 16, 16, 0.05);
+  opacity: 0;
+  animation: flicker 0.15s infinite;
+}
+
+.bezel {
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5),
+              0 0 0 20px #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 20px;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.1; }
+  5% { opacity: 0.05; }
+  10% { opacity: 0.12; }
+  15% { opacity: 0.08; }
+  20% { opacity: 0.15; }
+  25% { opacity: 0.05; }
+  30% { opacity: 0.1; }
+  35% { opacity: 0.05; }
+  40% { opacity: 0.12; }
+  45% { opacity: 0.15; }
+  50% { opacity: 0.08; }
+  55% { opacity: 0.1; }
+  60% { opacity: 0.12; }
+  65% { opacity: 0.05; }
+  70% { opacity: 0.08; }
+  75% { opacity: 0.15; }
+  80% { opacity: 0.1; }
+  85% { opacity: 0.05; }
+  90% { opacity: 0.12; }
+  95% { opacity: 0.08; }
+  100% { opacity: 0.1; }
+}
+
+/* Subtle "glow" refresh line crawling down the screen */
+.monitorReflector {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 20%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  animation: scanlineScroll 8s linear infinite;
+  pointer-events: none;
+  z-index: 11;
+}
+
+@keyframes scanlineScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(600%); }
+}

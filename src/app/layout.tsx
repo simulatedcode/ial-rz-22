@@ -8,6 +8,7 @@ console.warn = (...args: unknown[]) => {
 };
 import SmoothScroll from "@/components/SmoothScroll";
 import CanvasRoot from "@/components/webgl/CanvasRoot";
+import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,21 +36,15 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="relative w-full min-h-screen bg-black">
-
-        {/* 🎥 WebGL Layer (BACKGROUND) */}
-        <div className="fixed inset-0 z-0">
-          <CanvasRoot />
-        </div>
-
-        {/* 🧠 UI Layer */}
-        <div className="relative z-10">
-          <SmoothScroll>{children}</SmoothScroll>
-        </div>
-
-        {/* 📺 CRT Overlay */}
-        <div className="crt-overlay" />
-
+      <body className="relative w-full min-h-screen bg-black overflow-hidden">
+        <GlobalCRTOverlay>
+          <div className="fixed inset-0 z-0">
+            <CanvasRoot />
+          </div>
+          <div className="relative z-10">
+            <SmoothScroll>{children}</SmoothScroll>
+          </div>
+        </GlobalCRTOverlay>
       </body>
     </html>
   );
