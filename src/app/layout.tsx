@@ -7,9 +7,9 @@ console.warn = (...args: unknown[]) => {
   originalWarn(...args);
 };
 import SmoothScroll from "@/components/SmoothScroll";
-import CanvasRoot from "@/components/webgl/CanvasRoot";
 import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import "./globals.css";
+import { GridLayout } from "@/components/ui/GridLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,13 +37,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="relative w-full min-h-screen bg-black overflow-hidden">
+
         <GlobalCRTOverlay>
-          <div className="fixed inset-0 z-0">
-            <CanvasRoot />
-          </div>
-          <div className="relative z-10">
-            <SmoothScroll>{children}</SmoothScroll>
-          </div>
+          <GridLayout>
+            <div className="relative z-10">
+              <SmoothScroll>{children}</SmoothScroll>
+            </div>
+          </GridLayout>
         </GlobalCRTOverlay>
       </body>
     </html>

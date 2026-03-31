@@ -28,6 +28,12 @@ export const GlobalCRTOverlay: React.FC<GlobalCRTOverlayProps> = ({
 
       {/* Overlay Layers (Non-interactive) */}
       <div className={styles.overlay}>
+        {/* Hardware Noise Grain */}
+        <div className={`${styles.overlay} ${styles.noise}`} />
+
+        {/* Phosphor Bloom layer */}
+        <div className={`${styles.overlay} ${styles.bloom}`} />
+
         {/* Repeating scanline grid */}
         <div className={`${styles.overlay} ${styles.scanlines}`} />
         
