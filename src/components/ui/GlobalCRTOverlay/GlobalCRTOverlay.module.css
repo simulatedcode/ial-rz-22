@@ -29,24 +29,31 @@
 }
 
 /* -------------------------------------------------- */
-/* SCANLINES */
+/* SCANLINES + GRID */
 /* -------------------------------------------------- */
 
 .scanlines {
   background:
     linear-gradient(
       rgba(0, 0, 0, 0) 50%,
-      rgba(0, 0, 0, 0.25) 50%
+      rgba(0, 0, 0, 0.3) 50%
     ),
     linear-gradient(
       90deg,
-      rgba(255, 0, 0, 0.06) 0%,
-      rgba(0, 255, 0, 0.05) 50%,
-      rgba(0, 0, 255, 0.06) 100%
+      rgba(255, 0, 0, 0.04) 0%,
+      rgba(0, 255, 0, 0.03) 50%,
+      rgba(0, 0, 255, 0.04) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
     );
 
-  background-size: 100% 3px, 4px 100%;
-  opacity: 0.15;
+  background-size: 100% 3px, 4px 100%, 100% 100%;
+  opacity: 0.4;
 
   backdrop-filter: contrast(1.02) brightness(1.02);
 }
@@ -68,9 +75,9 @@
 /* -------------------------------------------------- */
 
 .bloom {
-  backdrop-filter: blur(0.3px) brightness(1.04);
+  backdrop-filter: blur(0.5px) brightness(1.05);
   mix-blend-mode: screen;
-  opacity: 0.1;
+  opacity: 0.2;
 }
 
 /* -------------------------------------------------- */

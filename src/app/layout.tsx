@@ -7,7 +7,7 @@ import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import { GridLayout } from "@/components/ui/GridLayout";
 import { HUDBorder } from "@/components/ui/HUDBorder/HUDBorder";
 import Header from "@/components/ui/Header";
-import CanvasRoot from "@/components/webgl/CanvasRoot";
+import CanvasWrapper from "@/components/ui/CanvasWrapper";
 
 import "./globals.css";
 
@@ -47,7 +47,7 @@ export default function RootLayout({
 
         {/* 🔥 WebGL Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <CanvasRoot />
+          <CanvasWrapper />
         </div>
 
         {/* 🧠 UI Layer */}

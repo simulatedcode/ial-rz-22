@@ -4,6 +4,11 @@ declare module '*.glsl' {
   export default content
 }
 
+declare module '*.glsl?raw' {
+  const content: string
+  export default content
+}
+
 declare module '*.frag' {
   const content: string
   export default content

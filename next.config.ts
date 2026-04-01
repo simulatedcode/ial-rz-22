@@ -9,15 +9,6 @@ const nextConfig: NextConfig = {
   },
 
   turbopack: {},
-
-  webpack(config) {
-    config.module.rules.unshift({
-      test: /\.(glsl|vs|fs|vert|frag)$/,
-      type: 'asset/source'
-    });
-
-    return config;
-  },
 };
 
 export default nextConfig;

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
@@ -18,38 +18,37 @@ function RotatingCamera() {
     state.camera.position.y = 0.5
     state.camera.lookAt(0, 0, 0)
   })
-  
   return null
 }
 
 function CinematicLighting() {
   return (
     <>
-      <ambientLight intensity={0.3} />
-      
+      {/* 🔥 increase ambient */}
+      <ambientLight intensity={0.6} />
+
       <directionalLight
         position={[5, 5, 5]}
-        intensity={1.2}
+        intensity={1.0} // 🔥 stronger
       />
-      
+
       <pointLight
         position={[0, -2, 3]}
-        intensity={0.4}
+        intensity={0.4} // 🔥 stronger
         color="#4a9eff"
       />
     </>
   )
-}
-
-function CenteredModel() {
+} function CenteredModel() {
   const modelRef = useRef<THREE.Group>(null)
-  
+
   useFrame((state) => {
     if (modelRef.current) {
-      modelRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.05
+      modelRef.current.rotation.y =
+        Math.sin(state.clock.elapsedTime * 0.1) * 0.05
     }
   })
-  
+
   return (
     <group ref={modelRef} position={[0, -1, 0]} scale={2}>
       <Model />
@@ -59,37 +58,20 @@ function CenteredModel() {
 
 export default function CanvasRoot() {
   return (
-    <Canvas
-      camera={{
-        position: [0, 0.5, 4],
-        fov: 35,
-        near: 0.1,
-        far: 100
-      }}
-      dpr={[1, 2]}
-      gl={{
-        antialias: true,
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2
-      }}
-    >
+    <>
+      {/* Scene */}
       <color attach="background" args={['#050810']} />
-      
       <fog attach="fog" args={['#050810', 5, 15]} />
-      
+
       <CinematicLighting />
-      
       <CenteredModel />
-      
       <RotatingCamera />
-      
+
+      {/* 🔥 Pipeline */}
       <EffectComposer>
         <SignalProcessor />
-        <TernaryPass
-          threshold={0.15}
-          debug={0}
-        />
+        <TernaryPass threshold={0.15} debug={0} />
       </EffectComposer>
-    </Canvas>
+    </>
   )
 }
