@@ -1,21 +1,106 @@
 @import "tailwindcss";
 
-:root {
-  --background: #000000;
-  --foreground: #ededed;
+@theme {
+  /* =========================
+   * 📏 BREAKPOINTS
+   * ========================= */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* =========================
+   * 🎨 PRIMITIVE COLORS
+   * ========================= */
+  --color-flame-50: #FEECE7;
+  --color-flame-100: #FCCBBB;
+  --color-flame-200: #FAAA8F;
+  --color-flame-300: #F88863;
+  --color-flame-400: #F66737;
+  --color-flame-500: #E9440B;
+  --color-flame-600: #C83909;
+  --color-flame-700: #9C2C07;
+  --color-flame-800: #702005;
+  --color-flame-900: #441303;
+  --color-flame-950: #180701;
+
+  --color-ocean-50: #ECF8F8;
+  --color-ocean-100: #CBEAEC;
+  --color-ocean-200: #A9DDDF;
+  --color-ocean-300: #88CFD3;
+  --color-ocean-400: #58BBC1;
+  --color-ocean-500: #45B4BA;
+  --color-ocean-600: #389499;
+  --color-ocean-700: #2C7377;
+  --color-ocean-800: #205356;
+  --color-ocean-900: #133234;
+  --color-ocean-950: #071213;
+
+  /* =========================
+   * 🧠 SEMANTIC TOKENS
+   * ========================= */
+
+  /* base */
+  --color-background: var(--color-ocean-950);
+  --color-foreground: var(--color-ocean-100);
+
+  /* surfaces */
+  --color-panel: var(--color-ocean-900);
+  --color-panel-foreground: var(--color-ocean-100);
+
+  /* primary (brand / action) */
+  --color-primary: var(--color-flame-500);
+  --color-primary-foreground: white;
+
+  /* secondary (subtle UI) */
+  --color-secondary: var(--color-ocean-700);
+  --color-secondary-foreground: var(--color-ocean-100);
+
+  /* accent (hover / highlights / glow) */
+  --color-accent: var(--color-flame-400);
+  --color-accent-foreground: white;
+
+  /* muted */
+  --color-muted: var(--color-ocean-800);
+  --color-muted-foreground: var(--color-ocean-300);
+
+  /* borders */
+  --color-border: var(--color-ocean-700);
+
+  /* state */
+  --color-danger: var(--color-flame-500);
+  --color-success: #22c55e;
+
+  /* =========================
+   * 🔤 TYPOGRAPHY
+   * ========================= */
+  --font-sans: var(--font-ibm-sans, sans-serif);
+  --font-mono: var(--font-ibm-mono, monospace);
+  --font-pixel: var(--font-pixel, monospace);
+
+  /* =========================
+   * 🧱 RADIUS (HUD style)
+   * ========================= */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --glow-primary: 0 0 12px var(--color-flame-500);
+  --glow-accent: 0 0 8px var(--color-flame-400);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  --color-background: #071213;
+}
+
+.dark {
+  --color-background: #000000;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-pixel), monospace;
 }
 
 .crt-overlay {
@@ -67,4 +152,76 @@ body {
   55% { opacity: 0.97; }
   60% { opacity: 0.98; }
   100% { opacity: 0.97; }
+}
+
+/* =========================
+ * 📱 RESPONSIVE LAYOUT
+ * ========================= */
+
+/* Mobile First Base */
+@media (max-width: 639px) {
+  .responsive-container {
+    padding: 1rem;
+  }
+  
+  .responsive-title {
+    font-size: 2.5rem;
+    line-height: 1.1;
+  }
+  
+  .responsive-description {
+    font-size: 1rem;
+    max-width: 90%;
+  }
+  
+  .responsive-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .responsive-filter {
+    transform: scale(0.85);
+    padding: 0.5rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .responsive-container {
+    padding: 1.5rem;
+  }
+  
+  .responsive-title {
+    font-size: 3.5rem;
+    line-height: 1.15;
+  }
+  
+  .responsive-description {
+    font-size: 1.125rem;
+    max-width: 80%;
+  }
+  
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .responsive-container {
+    padding: 2rem 4rem;
+  }
+  
+  .responsive-title {
+    font-size: 4.5rem;
+    line-height: 1.2;
+  }
+  
+  .responsive-description {
+    font-size: 1.25rem;
+    max-width: 36rem;
+  }
+  
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }

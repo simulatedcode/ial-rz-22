@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const originalWarn = console.warn;
-console.warn = (...args: unknown[]) => {
-  if (args[0]?.toString().includes("THREE.Clock")) return;
-  originalWarn(...args);
-};
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import SmoothScroll from "@/components/SmoothScroll";
 import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import "./globals.css";
 import { GridLayout } from "@/components/ui/GridLayout";
+import { HUDBorder } from "@/components/ui/HUDBorder/HUDBorder";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ibmSans = IBM_Plex_Sans({
+  variable: "--font-ibm-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ibmMono = IBM_Plex_Mono({
+  variable: "--font-ibm-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const pixelFont = localFont({
+  src: "./fonts/Web437_Portfolio_6x8.woff",
+  variable: "--font-pixel",
 });
 
 export const metadata: Metadata = {
@@ -32,19 +35,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
-    >
+      <html
+        lang="en"
+        className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
+      >
       <body className="relative w-full min-h-screen bg-black overflow-hidden">
-
-        <GlobalCRTOverlay>
-          <GridLayout>
-            <div className="relative z-10">
-              <SmoothScroll>{children}</SmoothScroll>
-            </div>
-          </GridLayout>
-        </GlobalCRTOverlay>
+        <HUDBorder>
+          <GlobalCRTOverlay>
+            <GridLayout>
+              <div className="relative z-10">
+                <SmoothScroll>{children}</SmoothScroll>
+              </div>
+            </GridLayout>
+          </GlobalCRTOverlay>
+        </HUDBorder>
       </body>
     </html>
   );
