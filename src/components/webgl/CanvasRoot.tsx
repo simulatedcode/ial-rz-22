@@ -25,31 +25,17 @@ function RotatingCamera() {
 function CinematicLighting() {
   return (
     <>
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={0.3} />
       
       <directionalLight
         position={[5, 5, 5]}
-        intensity={1.5}
-      />
-      
-      <directionalLight
-        position={[-3, 2, -2]}
-        intensity={0.8}
-        color="#4a9eff"
+        intensity={1.2}
       />
       
       <pointLight
         position={[0, -2, 3]}
-        intensity={0.5}
-        color="#ff6b35"
-      />
-      
-      <spotLight
-        position={[0, 5, 0]}
-        angle={0.5}
-        penumbra={1}
-        intensity={0.5}
-        color="#ffffff"
+        intensity={0.4}
+        color="#4a9eff"
       />
     </>
   )
@@ -80,6 +66,7 @@ export default function CanvasRoot() {
         near: 0.1,
         far: 100
       }}
+      dpr={[1, 2]}
       gl={{
         antialias: true,
         toneMapping: THREE.ACESFilmicToneMapping,
