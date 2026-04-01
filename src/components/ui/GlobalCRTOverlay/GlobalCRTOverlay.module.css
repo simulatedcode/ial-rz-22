@@ -1,31 +1,31 @@
 /* -------------------------------------------------- */
-/* CONTAINER */
+/* ROOT CONTAINER (PURE OVERLAY — NO LAYOUT IMPACT) */
 /* -------------------------------------------------- */
 
 .container {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #071213;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
 }
+
+/* -------------------------------------------------- */
+/* OPTIONAL CONTENT (ONLY USED IN WRAPPER MODE) */
+/* -------------------------------------------------- */
 
 .content {
   position: relative;
-  flex: 1;
   z-index: 1;
 }
 
 /* -------------------------------------------------- */
-/* BASE OVERLAY LAYER (REUSABLE) */
+/* BASE OVERLAY LAYER */
 /* -------------------------------------------------- */
 
 .overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 10;
 }
 
 /* -------------------------------------------------- */
@@ -46,9 +46,9 @@
     );
 
   background-size: 100% 3px, 4px 100%;
-  opacity: 0.35;
+  opacity: 0.15;
 
-  backdrop-filter: contrast(1.05) brightness(1.05);
+  backdrop-filter: contrast(1.02) brightness(1.02);
 }
 
 /* -------------------------------------------------- */
@@ -58,8 +58,8 @@
 .vignette {
   background: radial-gradient(
     circle,
-    transparent 55%,
-    rgba(0, 0, 0, 0.35) 100%
+    transparent 50%,
+    rgba(0, 0, 0, 0.25) 90%
   );
 }
 
@@ -68,9 +68,9 @@
 /* -------------------------------------------------- */
 
 .bloom {
-  backdrop-filter: blur(0.4px) brightness(1.08);
+  backdrop-filter: blur(0.3px) brightness(1.04);
   mix-blend-mode: screen;
-  opacity: 0.18;
+  opacity: 0.1;
 }
 
 /* -------------------------------------------------- */
@@ -80,18 +80,18 @@
 .noise {
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
-  opacity: 0.03;
+  opacity: 0.015;
   animation: noiseJitter 0.4s steps(3) infinite;
 }
 
 /* -------------------------------------------------- */
-/* FLICKER (MISSING BEFORE → NOW ADDED) */
+/* FLICKER */
 /* -------------------------------------------------- */
 
 .flicker {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.01);
   mix-blend-mode: overlay;
-  animation: flickerAnim 2s infinite;
+  animation: flickerAnim 3s infinite;
 }
 
 /* -------------------------------------------------- */
@@ -114,7 +114,6 @@
 
   animation: scanlineScroll 10s linear infinite;
   pointer-events: none;
-  z-index: 11;
 }
 
 /* -------------------------------------------------- */

@@ -43,28 +43,25 @@ export default function RootLayout({
       lang="en"
       className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
     >
-      <body className="relative w-full min-h-screen bg-background overflow-hidden">
+      <body className="relative w-full min-h-screen bg-background overflow-hidden" suppressHydrationWarning>
 
-        {/* 🔥 1. WEBGL BACKGROUND (SIGNAL PIPELINE) */}
+        {/* 🔥 WebGL Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <CanvasRoot />
         </div>
 
-        {/* 🧠 2. UI + HUD LAYER */}
-        <div className="relative z-10 w-full h-full">
+        {/* 🧠 UI Layer */}
+        <main className="relative z-10 w-full min-h-screen">
           <HUDBorder>
-            <GlobalCRTOverlay>
-              <GridLayout>
-                <Header />
-
-                <div className="relative z-10">
-                  <SmoothScroll>{children}</SmoothScroll>
-                </div>
-
-              </GridLayout>
-            </GlobalCRTOverlay>
+            <GridLayout>
+              <Header />
+              <SmoothScroll>{children}</SmoothScroll>
+            </GridLayout>
           </HUDBorder>
-        </div>
+        </main>
+
+        {/* 🎨 CRT Overlay */}
+        <GlobalCRTOverlay />
 
       </body>
     </html>

@@ -11,19 +11,14 @@ uniform vec2 uResolution;
 uniform float uTime;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-
-    // 🔹 1. SAMPLE SCENE COLOR
     vec3 col = inputColor.rgb;
 
-    // 🔹 2. ENCODE SIGNAL (luminance → [-1, 1])
     float signal = dot(col, vec3(0.299, 0.587, 0.114));
     signal = signal * 2.0 - 1.0;
 
-    // 🔹 3. PACK TO [0, 1]
     float packed = signal * 0.5 + 0.5;
 
-    // 🔹 4. OUTPUT
-    outputColor = vec4(vec3(packed), 1.0);
+    outputColor = vec4(packed, col.g, col.b, 1.0);
 }
 `
 

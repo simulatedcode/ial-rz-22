@@ -17,37 +17,31 @@ float toTernary(float x, float t) {
 }
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+    vec4 buffer = texture2D(inputBuffer, uv);
 
-    // 🔹 1. READ SIGNAL FROM PREVIOUS PASS
-    float packed = inputColor.r;
-    float signal = packed * 2.0 - 1.0;
-
-    // 🔥 2. APPLY TERNARY
+    float signal = buffer.r * 2.0 - 1.0;
     float t = toTernary(signal, uThreshold);
 
-    // 🧪 3. DEBUG VIEW (VERY IMPORTANT)
-    if (uDebug == 1) {
-        vec3 debugColor = vec3(
-            step(0.5, t),      // +1 → red
-            step(0.1, abs(t)), // ±1 → green
-            step(0.5, -t)      // -1 → blue
-        );
+    vec3 color = vec3(buffer.r, buffer.g, buffer.b);
+    color.r = t * 0.5 + 0.5;
 
-        outputColor = vec4(debugColor, 1.0);
-        return;
-    }
+    vec3 debugColor = vec3(
+        step(0.5, t),
+        step(0.1, abs(t)),
+        step(0.5, -t)
+    );
 
-    // 🔹 4. RECONSTRUCT IMAGE
-    vec3 col = vec3(t * 0.5 + 0.5);
+    float debugToggle = float(uDebug);
+    vec3 finalColor = mix(color, debugColor, debugToggle);
 
-    outputColor = vec4(col, 1.0);
+    outputColor = vec4(finalColor, 1.0);
 }
 `
 
 class TernaryEffect extends Effect {
   constructor({
-    threshold = 0.25,
-    debug = 1,
+    threshold = 0.15,
+    debug = 0,
   }: {
     threshold?: number
     debug?: number
@@ -64,16 +58,12 @@ class TernaryEffect extends Effect {
 
   update(_renderer: unknown, _inputBuffer: unknown, deltaTime: number): void {
     const uTime = this.uniforms.get('uTime')
-    if (uTime) {
-      uTime.value += deltaTime
-    }
+    if (uTime) uTime.value += deltaTime
   }
 
   setSize(width: number, height: number): void {
     const uResolution = this.uniforms.get('uResolution')
-    if (uResolution) {
-      uResolution.value.set(width, height)
-    }
+    if (uResolution) uResolution.value.set(width, height)
   }
 }
 
