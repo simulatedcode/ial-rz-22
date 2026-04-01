@@ -90,7 +90,8 @@
 }
 
 :root {
-  --color-background: #071213;
+  --color-background:#171213;
+  --color-foreground: #ECF8F8 ;
 }
 
 .dark {
@@ -98,8 +99,8 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-pixel), monospace;
 }
 

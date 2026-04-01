@@ -12,13 +12,13 @@
   /* line thickness                    */
   --hud-corner-size: 18px;
   /* arm length of each L-bracket      */
-  --hud-tick-size: 10px;
+  --hud-tick-size: 12px;
   /* half-length of center tick marks  */
   --hud-label-size: 9px;
   /* label font size                   */
   --hud-label-tracking: 0.22em;
   /* letter-spacing                    */
-  --hud-gap: clamp(16px, 4vw, 64px);
+  --hud-gap: clamp(12px, 4vw, 16px);
   /* inset from element edge           */
   --hud-anim-dur: 0.6s;
   /* mount animation duration          */

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
+
 import SmoothScroll from "@/components/SmoothScroll";
 import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
-import "./globals.css";
 import { GridLayout } from "@/components/ui/GridLayout";
 import { HUDBorder } from "@/components/ui/HUDBorder/HUDBorder";
+import Header from "@/components/ui/Header";
+import CanvasRoot from "@/components/webgl/CanvasRoot";
+
+import "./globals.css";
 
 const ibmSans = IBM_Plex_Sans({
   variable: "--font-ibm-sans",
@@ -35,20 +39,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-      <html
-        lang="en"
-        className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
-      >
-      <body className="relative w-full min-h-screen bg-black overflow-hidden">
-        <HUDBorder>
-          <GlobalCRTOverlay>
-            <GridLayout>
-              <div className="relative z-10">
-                <SmoothScroll>{children}</SmoothScroll>
-              </div>
-            </GridLayout>
-          </GlobalCRTOverlay>
-        </HUDBorder>
+    <html
+      lang="en"
+      className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
+    >
+      <body className="relative w-full min-h-screen bg-background overflow-hidden">
+
+        {/* 🔥 1. WEBGL BACKGROUND (SIGNAL PIPELINE) */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <CanvasRoot />
+        </div>
+
+        {/* 🧠 2. UI + HUD LAYER */}
+        <div className="relative z-10 w-full h-full">
+          <HUDBorder>
+            <GlobalCRTOverlay>
+              <GridLayout>
+                <Header />
+
+                <div className="relative z-10">
+                  <SmoothScroll>{children}</SmoothScroll>
+                </div>
+
+              </GridLayout>
+            </GlobalCRTOverlay>
+          </HUDBorder>
+        </div>
+
       </body>
     </html>
   );
