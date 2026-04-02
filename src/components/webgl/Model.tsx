@@ -13,8 +13,6 @@ export const Model = forwardRef<Group>((props, ref) => {
 
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        child.frustumCulled = false
-
         // ✅ KEEP ORIGINAL MATERIAL
         if (child.material) {
           const mat = child.material as THREE.MeshStandardMaterial

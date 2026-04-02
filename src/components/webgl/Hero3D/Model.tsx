@@ -31,6 +31,9 @@ export default function Model() {
 
       if (child.name !== 'Body') return
 
+      // Allow frustum culling on other meshes, but disable it for Body because displacementMap pushes vertices out of bounds
+      child.frustumCulled = false
+
       const geometry = child.geometry.clone()
 
       const bbox = new THREE.Box3().setFromBufferAttribute(
@@ -46,29 +49,24 @@ export default function Model() {
       const colorData = new Uint8Array(textureSize * textureSize * 4)
 
       // 🔥 FAST LOOP
-      for (let i = 0; i < pcd.positions.length; i++) {
-        const point = pcd.positions[i]
-        const color = pcd.colors[i]
+      for (let i = 0; i < pcd.count; i++) {
+        const px = pcd.positions[i * 3]
+        const py = pcd.positions[i * 3 + 1]
+        const pz = pcd.positions[i * 3 + 2]
 
-        const uvX = Math.floor(
-          ((point.x - bbox.min.x) / size.x) * textureSize
-        )
-        const uvY = Math.floor(
-          ((point.y - bbox.min.y) / size.y) * textureSize
-        )
+        const uvX = Math.floor(((px - bbox.min.x) / size.x) * textureSize)
+        const uvY = Math.floor(((py - bbox.min.y) / size.y) * textureSize)
 
-        if (uvX < 0 || uvX >= textureSize || uvY < 0 || uvY >= textureSize)
-          continue
+        if (uvX < 0 || uvX >= textureSize || uvY < 0 || uvY >= textureSize) continue
 
         const idx = uvY * textureSize + uvX
 
-        displacementData[idx] =
-          (point.z - bbox.min.z) / size.z
+        displacementData[idx] = (pz - bbox.min.z) / size.z
 
         const ci = idx * 4
-        colorData[ci] = color.r * 255
-        colorData[ci + 1] = color.g * 255
-        colorData[ci + 2] = color.b * 255
+        colorData[ci] = pcd.colors[i * 3] * 255
+        colorData[ci + 1] = pcd.colors[i * 3 + 1] * 255
+        colorData[ci + 2] = pcd.colors[i * 3 + 2] * 255
         colorData[ci + 3] = 255
       }
 

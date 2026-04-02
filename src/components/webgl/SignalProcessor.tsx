@@ -29,7 +29,7 @@ class SignalProcessorEffect extends Effect {
 
 export const SignalProcessor = forwardRef<SignalProcessorEffect>((_, ref) => {
   const effect = useMemo(() => new SignalProcessorEffect(), [])
-  return <primitive ref={ref} object={effect} dispose={null} />
+  return <primitive ref={ref} object={effect} />
 })
 
 SignalProcessor.displayName = 'SignalProcessor'

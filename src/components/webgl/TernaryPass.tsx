@@ -33,8 +33,7 @@ export const TernaryPass = forwardRef<TernaryEffect, TernaryPassProps>(
     const effect = useMemo(() => {
       return new TernaryEffect({ threshold, debug })
     }, [threshold, debug])
-
-    return <primitive ref={ref} object={effect} dispose={null} />
+    return <primitive ref={ref} object={effect} />
   }
 )
 

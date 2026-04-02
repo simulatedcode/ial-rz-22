@@ -37,8 +37,6 @@ export const useModel = <TKey extends keyof typeof ASSETS.models>(
 
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        child.frustumCulled = false
-
         if (child.material) {
           const mat = child.material as THREE.MeshStandardMaterial
           mat.toneMapped = true
