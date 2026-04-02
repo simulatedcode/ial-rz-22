@@ -5,7 +5,6 @@ import localFont from "next/font/local";
 import SmoothScroll from "@/components/SmoothScroll";
 import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import { GridLayout } from "@/components/ui/GridLayout";
-import { HUDBorder } from "@/components/ui/HUDBorder/HUDBorder";
 import Header from "@/components/ui/Header";
 import CanvasWrapper from "@/components/ui/CanvasWrapper";
 
@@ -52,17 +51,14 @@ export default function RootLayout({
 
         {/* 🧠 UI Layer */}
         <main className="relative z-10 w-full min-h-screen">
-          <HUDBorder>
-            <GridLayout>
-              <Header />
-              <SmoothScroll>{children}</SmoothScroll>
-            </GridLayout>
-          </HUDBorder>
+          <GridLayout>
+            <Header />
+            <SmoothScroll>{children}</SmoothScroll>
+          </GridLayout>
+
+          {/* 🎨 CRT Overlay */}
+          <GlobalCRTOverlay />
         </main>
-
-        {/* 🎨 CRT Overlay */}
-        <GlobalCRTOverlay />
-
       </body>
     </html>
   );
