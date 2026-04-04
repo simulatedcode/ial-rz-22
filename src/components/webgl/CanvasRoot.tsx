@@ -8,15 +8,22 @@ import * as THREE from 'three'
 import { Model } from './Model'
 import { SignalProcessor } from './SignalProcessor'
 import { TernaryPass } from './TernaryPass'
+import TransitionController from './TransitionController'
+import { useTransitionStore } from '@/store/useTransitionStore'
 
 function RotatingCamera() {
+  const phase = useTransitionStore((state) => state.phase)
+
   useFrame((state) => {
-    const angle = state.clock.elapsedTime * 0.2
-    const radius = 4
-    state.camera.position.x = Math.sin(angle) * radius
-    state.camera.position.z = Math.cos(angle) * radius
-    state.camera.position.y = 0.5
-    state.camera.lookAt(0, 0, 0)
+    // Only rotate if we are not in a hard transition
+    if (phase === 'idle') {
+      const angle = state.clock.elapsedTime * 0.2
+      const radius = 4
+      state.camera.position.x = Math.sin(angle) * radius
+      state.camera.position.z = Math.cos(angle) * radius
+      state.camera.position.y = 0.5
+      state.camera.lookAt(0, 0, 0)
+    }
   })
   return null
 }
@@ -39,7 +46,9 @@ function CinematicLighting() {
       />
     </>
   )
-} function CenteredModel() {
+}
+
+function CenteredModel() {
   const modelRef = useRef<THREE.Group>(null)
 
   useFrame((state) => {
@@ -57,12 +66,15 @@ function CinematicLighting() {
 }
 
 export default function CanvasRoot() {
+  const ternaryRef = useRef<any>(null)
+
   return (
     <>
       {/* Scene */}
       <color attach="background" args={['#050810']} />
       <fog attach="fog" args={['#050810', 5, 15]} />
 
+      <TransitionController effectRef={ternaryRef} />
       <CinematicLighting />
       <CenteredModel />
       <RotatingCamera />
@@ -70,7 +82,7 @@ export default function CanvasRoot() {
       {/* 🔥 Pipeline */}
       <EffectComposer multisampling={0}>
         <SignalProcessor />
-        <TernaryPass threshold={0.15} debug={0} />
+        <TernaryPass ref={ternaryRef} threshold={0.15} debug={0} />
       </EffectComposer>
     </>
   )

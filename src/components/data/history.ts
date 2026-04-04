@@ -90,9 +90,9 @@ export const updates: Update[] = [
     },
     {
         id: 11,
-        title: "Layered Narratives : The Art of Contemporary Printmaking",
+        title: "Layered Narrative",
         location: "art: 1, Jakarta",
-        description: "As the revolutionary practice of Printmaking continues to shape the visual language of contemporary art, we are bringing together a remarkable assortment from Printmaking artists and their innovations.As the revolutionary practice of Printmaking continues to shape the visual language of contemporary art, we are bringing together a remarkable assortment from Printmaking artists and their innovations.",
+        description: "",
         date: "12-17 April 2025",
         year: 2025
     },

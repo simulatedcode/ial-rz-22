@@ -32,10 +32,23 @@ export default function HistoryPage() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex flex-col min-h-screen pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto w-full"
-    >
+    <div className="relative min-h-screen">
+      {/* Dynamic Background Data Grid (Consolidated from layout.tsx) */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none opacity-20"
+        style={{
+          backgroundImage: 'linear-gradient(to right, var(--color-ocean-900) 1px, transparent 1px), linear-gradient(to bottom, var(--color-ocean-900) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          backgroundPosition: 'center'
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background"></div>
+      </div>
+
+      <div
+        ref={containerRef}
+        className="relative z-10 flex flex-col min-h-screen pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto w-full"
+      >
       <header className="mb-12 border-b border-border pb-8 header-title">
         <h1 className="text-xl md:text-2xl lg:text-4xl font-bold font-sans tracking-tighter text-primary mb-4 uppercase drop-shadow-[0_0_8px_var(--color-flame-500)]">
           Operational History
@@ -102,6 +115,7 @@ export default function HistoryPage() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
