@@ -68,7 +68,7 @@ export default function CanvasRoot() {
       <RotatingCamera />
 
       {/* 🔥 Pipeline */}
-      <EffectComposer>
+      <EffectComposer multisampling={0}>
         <SignalProcessor />
         <TernaryPass threshold={0.15} debug={0} />
       </EffectComposer>

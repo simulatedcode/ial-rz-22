@@ -6,12 +6,10 @@ import * as THREE from 'three'
 import type { Group } from 'three'
 
 export const Model = forwardRef<Group>((props, ref) => {
-  const { scene } = useGLTF('/model/newscene.gltf')
+  const { scene } = useGLTF('/model/newscene.glb')
 
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone(true)
-
-    clone.traverse((child) => {
+  useMemo(() => {
+    scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         // ✅ KEEP ORIGINAL MATERIAL
         if (child.material) {
@@ -24,13 +22,12 @@ export const Model = forwardRef<Group>((props, ref) => {
       }
     })
 
-    return clone
   }, [scene])
 
   return (
     <primitive
       ref={ref}
-      object={clonedScene}
+      object={scene}
       scale={1}
       position={[0, 0, 0]}
     />
@@ -39,4 +36,4 @@ export const Model = forwardRef<Group>((props, ref) => {
 
 Model.displayName = 'Model'
 
-useGLTF.preload('/model/newscene.gltf')
+useGLTF.preload('/model/newscene.glb')
