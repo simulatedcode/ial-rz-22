@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 
 const SITE_CONFIG = {
   location: 'YK',
@@ -17,53 +18,75 @@ function formatCoordinate(value: number, type: 'lat' | 'lng'): string {
 export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [time, setTime] = useState('--:--')
-  const [utc, setUtc] = useState('UTC+0')
+  // Asia/Jakarta is technically always UTC+7
+  const [utc, setUtc] = useState('UTC+7')
 
-  const coords = useMemo(() => 
+  const coords = useMemo(() =>
     `${formatCoordinate(SITE_CONFIG.latitude, 'lat')}, ${formatCoordinate(SITE_CONFIG.longitude, 'lng')}`,
-  [])
+    [])
 
   useEffect(() => {
     setMounted(true)
-    
+
     const updateTime = () => {
       const now = new Date()
+      // Display time in the set timezone
       setTime(now.toLocaleTimeString('en-US', {
         timeZone: SITE_CONFIG.timezone,
         hour12: true,
         hour: '2-digit',
         minute: '2-digit'
       }))
-      setUtc(`UTC${now.getTimezoneOffset() <= 0 ? '+' : '-'}${Math.abs(Math.floor(now.getTimezoneOffset() / 60))}`)
+
+      // Calculate realistic offset for target timezone instead of local system offset.
+      // This is a rough estimation trick, though setting a static UTC+7 for Jakarta is safer.
+      const tzString = new Date().toLocaleString("en-US", { timeZone: SITE_CONFIG.timezone });
+      const localString = new Date().toLocaleString("en-US");
+      // For performance & correctness we just fall back to rendering the static UTC+7 
+      // but if you have multiple timezones, you can calculate diff here.
     }
-    
+
     updateTime()
-    const interval = setInterval(updateTime, 1000)
+    // Since we only display hours and minutes, a 1-second interval is unnecessarily 
+    // re-rendering the component 60 times a minute. We can safely drop this to 10 seconds.
+    const interval = setInterval(updateTime, 10000)
     return () => clearInterval(interval)
   }, [])
 
+  const layoutClasses = "fixed top-0 left-0 right-0 z-10 flex items-center justify-between mx-auto max-w-full px-8 py-8"
+
   if (!mounted) {
     return (
-      <div className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between mx-auto max-w-full px-4 sm:px-8 md:px-12 lg:px-22 py-6 sm:py-8 md:py-10 lg:py-14">
-        <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">PROJECT XYZ</div>
+      <div className={layoutClasses}>
+        <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
+          <Link href="/" className="text-muted-foreground hover:text-accent transsition-colors">PROJECT XYZ</Link>
+        </div>
         <div className='hidden sm:flex items-center gap-1 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground'>
           <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
           {coords}
         </div>
+        <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
+          <Link href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</Link>
+        </nav>
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-          {SITE_CONFIG.location}, --:-- UTC+0
+          {SITE_CONFIG.location}, --:-- {utc}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between mx-auto max-w-full px-4 sm:px-8 md:px-12 lg:px-22 py-6 sm:py-8 md:py-10 lg:py-14">
-      <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">PROJECT XYZ</div>
+    <div className={layoutClasses}>
+      <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
+        <Link href="/" className="text-muted-foreground hover:text-accent transsition-colors">PROJECT XYZ</Link>
+      </div>
       <div className='hidden sm:flex items-center gap-1 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground'>
         <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
         {coords}
       </div>
+      <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
+        <Link href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</Link>
+      </nav>
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
         {SITE_CONFIG.location}, {time} {utc}
       </div>
