@@ -13,9 +13,9 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const contactData = [
-    { cmd: 'fetch --email', label: 'EMAIL', value: 'riza@example.com', link: 'mailto:riza@example.com' },
-    { cmd: 'fetch --linkedin', label: 'LINKEDIN', value: 'linkedin.com/in/riza', link: 'https://linkedin.com/in/riza' },
-    { cmd: 'fetch --location', label: 'LOCATION', value: 'JAKARTA, ID', link: '#' },
+    { cmd: 'fetch --email', label: 'EMAIL', value: 'loskepetos@gmail.com', link: 'mailto:loskepetos@gmail.com' },
+    { cmd: 'fetch --linkedin', label: 'INSTAGRAM', value: 'linkedin.com/in/riza', link: 'https://linkedin.com/in/riza' },
+    { cmd: 'fetch --location', label: 'LOCATION', value: 'YOGYAKARTA, ID', link: '#' },
     { cmd: 'sys --status', label: 'STATUS', value: 'OPERATIONAL', link: '#' },
   ]
 
