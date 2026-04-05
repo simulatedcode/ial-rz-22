@@ -13,9 +13,9 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const contactData = [
-    { cmd: 'fetch --email', label: 'EMAIL', value: 'loskepetos@gmail.com', link: 'mailto:loskepetos@gmail.com' },
-    { cmd: 'fetch --linkedin', label: 'INSTAGRAM', value: 'https://instagram.com/keppett', link: 'https://instagram.com/keppett' },
-    { cmd: 'fetch --location', label: 'LOCATION', value: 'YOGYAKARTA, ID', link: '#' },
+    { cmd: 'contact --email', label: 'EMAIL', value: 'loskepetos@gmail.com', link: 'mailto:loskepetos@gmail.com' },
+    { cmd: 'connect --instagram', label: 'INSTAGRAM', value: '@keppett', link: 'https://instagram.com/keppett' },
+    { cmd: 'find --location', label: 'LOCATION', value: 'YOGYAKARTA, ID', link: '#' },
     { cmd: 'sys --status', label: 'STATUS', value: 'OPERATIONAL', link: '#' },
   ]
 
@@ -66,7 +66,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           {contactData.map((item, idx) => (
             <div key={idx} className="terminal-line group flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <span className="text-accent font-pixel text-[10px] shrink-0 whitespace-nowrap">
-                guest@ial-xyz:~$ {item.cmd}
+                guest@przoject-xyz:~$ {item.cmd}
               </span>
               <a
                 href={item.link}
