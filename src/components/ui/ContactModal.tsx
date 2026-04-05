@@ -14,7 +14,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   const contactData = [
     { cmd: 'fetch --email', label: 'EMAIL', value: 'loskepetos@gmail.com', link: 'mailto:loskepetos@gmail.com' },
-    { cmd: 'fetch --linkedin', label: 'INSTAGRAM', value: 'linkedin.com/in/riza', link: 'https://linkedin.com/in/riza' },
+    { cmd: 'fetch --linkedin', label: 'INSTAGRAM', value: 'https://instagram.com/keppett', link: 'https://instagram.com/keppett' },
     { cmd: 'fetch --location', label: 'LOCATION', value: 'YOGYAKARTA, ID', link: '#' },
     { cmd: 'sys --status', label: 'STATUS', value: 'OPERATIONAL', link: '#' },
   ]
@@ -22,15 +22,15 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const lines = containerRef.current.querySelectorAll('.terminal-line')
-      gsap.fromTo(lines, 
+      gsap.fromTo(lines,
         { opacity: 0, x: -10 },
-        { 
-          opacity: 1, 
-          x: 0, 
-          stagger: 0.1, 
-          duration: 0.4, 
+        {
+          opacity: 1,
+          x: 0,
+          stagger: 0.1,
+          duration: 0.4,
           ease: 'power2.out',
-          delay: 0.5 
+          delay: 0.5
         }
       )
     }
@@ -39,7 +39,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   return (
     <HUDModal isOpen={isOpen} onClose={onClose} title="SESSION: GUEST_ACCESS">
       <div ref={containerRef} className="space-y-6 text-foreground/90 leading-relaxed max-w-full overflow-hidden">
-        
+
         {/* Terminal Header Info */}
         <div className="terminal-line space-y-1">
           <p className="text-accent font-pixel text-[10px]">INITIALIZING_HANDSHAKE...</p>
@@ -68,7 +68,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
               <span className="text-accent font-pixel text-[10px] shrink-0 whitespace-nowrap">
                 guest@ial-xyz:~$ {item.cmd}
               </span>
-              <a 
+              <a
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -86,17 +86,17 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
         {/* ASCII/Status Separator */}
         <div className="terminal-line flex justify-center py-4 opacity-40">
-           <pre className="text-[6px] leading-none font-mono whitespace-pre text-primary">
-{` +---------------------------------+
+          <pre className="text-[6px] leading-none font-mono whitespace-pre text-primary">
+            {` +---------------------------------+
  | [ ACCESS_KEY: V-04-99-A ]       |
  | [ SECURE_TUNNEL: ENABLED ]      |
  +---------------------------------+`}
-           </pre>
+          </pre>
         </div>
 
         {/* Final Prompt */}
         <div className="terminal-line flex items-center gap-2 pt-2 text-[10px] font-pixel text-accent/60">
-          <span>guest@ial-xyz:~$</span>
+          <span>guest@przoject-xyz:~$</span>
           <div className="w-2 h-4 bg-accent animate-pulse" />
         </div>
 
