@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import TransitionLink from '@/components/ui/TransitionLink'
+import ContactModal from '@/components/ui/ContactModal'
 
 const SITE_CONFIG = {
   location: 'YK',
@@ -20,6 +22,7 @@ export default function Header() {
   const [time, setTime] = useState('--:--')
   // Asia/Jakarta is technically always UTC+7
   const [utc, setUtc] = useState('UTC+7')
+  const [isContactOpen, setIsContactOpen] = useState(false)
 
   const coords = useMemo(() =>
     `${formatCoordinate(SITE_CONFIG.latitude, 'lat')}, ${formatCoordinate(SITE_CONFIG.longitude, 'lng')}`,
@@ -53,20 +56,26 @@ export default function Header() {
     return () => clearInterval(interval)
   }, [])
 
-  const layoutClasses = "fixed top-0 left-0 right-0 z-10 flex items-center justify-between mx-auto max-w-full px-8 py-8"
+  const layoutClasses = "fixed top-0 left-0 right-0 z-100 flex items-center justify-between mx-auto max-w-full px-8 py-8"
 
   if (!mounted) {
     return (
       <div className={layoutClasses}>
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-          <Link href="/" className="text-muted-foreground hover:text-accent transsition-colors">PROJECT XYZ</Link>
+          <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
         </div>
-        <div className='hidden sm:flex items-center gap-1 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground'>
-          <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
+        <button
+          onClick={() => setIsContactOpen(true)}
+          className='hidden sm:flex items-center gap-2 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground hover:text-accent transition-all duration-300 group cursor-pointer'
+        >
+          <div className="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
+            <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-primary rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
           {coords}
-        </div>
+        </button>
         <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-          <Link href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</Link>
+          <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
         </nav>
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
           {SITE_CONFIG.location}, --:-- {utc}
@@ -78,14 +87,25 @@ export default function Header() {
   return (
     <div className={layoutClasses}>
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-        <Link href="/" className="text-muted-foreground hover:text-accent transsition-colors">PROJECT XYZ</Link>
+        <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
       </div>
-      <div className='hidden sm:flex items-center gap-1 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground'>
-        <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
+      <button
+        onClick={() => setIsContactOpen(true)}
+        className='hidden sm:flex items-center gap-2 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground hover:text-accent transition-all duration-300 group cursor-pointer'
+      >
+        <div className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24"><path fill="currentColor" d="M22 9V7h-1V5h-1V4h-1V3h-2V2h-2V1H9v1H7v1H5v1H4v1H3v2H2v2H1v7h1v1h1v2h1v1h1v1h2v1h2v1h6v-1h2v-1h2v-1h1v-1h1v-2h1v-2h1V9zm-1 1v4h-3v-4zm-5-6h1v1h2v2h1v1h-3V5h-1zm-2 14v2h-1v1h-2v-1h-1v-2H9v-2h6v2zm2-8v4H8v-4zM9 6h1V4h1V3h2v1h1v2h1v2H9zM4 7h1V5h2V4h1v1H7v3H4zm-1 7v-4h3v4zm2 5v-2H4v-1h3v3h1v1H7v-1zm14-2v2h-2v1h-1v-1h1v-3h3v1z"></path></svg>
+          <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-primary rounded-full animate-pulse opacity-100 transition-opacity" />
+        </div>
         {coords}
-      </div>
+      </button>
+
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+      />
       <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-        <Link href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</Link>
+        <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
       </nav>
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
         {SITE_CONFIG.location}, {time} {utc}
