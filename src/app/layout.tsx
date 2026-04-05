@@ -27,7 +27,7 @@ const pixelFont = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "PRZOJECT: IAL-RZ-22",
+  title: "PRZOJECT: IAL-PMEM-RZ84",
   description: "Speculative Future Memories",
 };
 

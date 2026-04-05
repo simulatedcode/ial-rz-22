@@ -62,7 +62,7 @@ export default function Header() {
     return (
       <div className={layoutClasses}>
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-          <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PROJECT XYZ</TransitionLink>
+          <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
         </div>
         <button
           onClick={() => setIsContactOpen(true)}
@@ -87,7 +87,7 @@ export default function Header() {
   return (
     <div className={layoutClasses}>
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-        <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PROJECT XYZ</TransitionLink>
+        <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
       </div>
       <button
         onClick={() => setIsContactOpen(true)}
