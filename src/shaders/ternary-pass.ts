@@ -1,6 +1,7 @@
 export const ternaryPassShader = `
 precision highp float;
 
+uniform vec2 uResolution;
 uniform float uThreshold;
 uniform int uDebug;
 
@@ -15,6 +16,9 @@ float toTernary(float x, float threshold) {
 }
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+    // 🔥 Pixelation logic
+    float pixelSize = 4.0; // Size of the "pixels"
+    vec2 pUv = floor(uv * uResolution / pixelSize) * pixelSize / uResolution;
 
     vec3 col = inputColor.rgb;
 
@@ -35,8 +39,22 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     }
 
     float signedT = t;
-    col *= (1.0 + signedT * 0.15);
-    col = pow(col, vec3(1.05));
+    
+    if (abs(signedT) > 0.01) {
+        // 🔥 Stylized digital appearance for the model
+        col *= (1.0 + signedT * 0.25);
+        
+        // Scanlines/Grid based on pixelated UV
+        float grid = 0.9 + 0.1 * sin(pUv.y * uResolution.y * 3.14159 / pixelSize);
+        grid *= 0.9 + 0.1 * sin(pUv.x * uResolution.x * 3.14159 / pixelSize);
+        col *= grid;
+        
+        // Boost contrast on signal
+        col = pow(col, vec3(1.1));
+    } else {
+        // Background remains relatively untouched
+        col = pow(col, vec3(1.05));
+    }
 
     outputColor = vec4(col, inputColor.a);
 }

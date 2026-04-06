@@ -19,32 +19,32 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
     if (isOpen) {
       // Entrance Animation
       const tl = gsap.timeline()
-      
+
       tl.set(overlayRef.current, { visibility: 'visible', opacity: 0 })
-      tl.set(modalRef.current, { 
-        scaleX: 0, 
-        scaleY: 0.01, 
+      tl.set(modalRef.current, {
+        scaleX: 0,
+        scaleY: 0.01,
         filter: 'blur(20px)',
         opacity: 0,
       })
 
       tl.to(overlayRef.current, { opacity: 1, duration: 0.3, ease: 'power2.out' })
-      tl.to(modalRef.current, { 
-        scaleX: 1, 
-        duration: 0.4, 
+      tl.to(modalRef.current, {
+        scaleX: 1,
+        duration: 0.4,
         ease: 'power4.inOut',
         opacity: 1,
       }, '-=0.1')
-      tl.to(modalRef.current, { 
-        scaleY: 1, 
-        filter: 'blur(0px)', 
-        duration: 0.5, 
-        ease: 'expo.out' 
+      tl.to(modalRef.current, {
+        scaleY: 1,
+        filter: 'blur(0px)',
+        duration: 0.5,
+        ease: 'expo.out'
       }, '-=0.2')
       if (contentRef.current) {
-        tl.fromTo(contentRef.current, 
+        tl.fromTo(contentRef.current,
           { opacity: 0, y: 10 },
-          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
           '-=0.3'
         )
       }
@@ -53,17 +53,17 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
       const tl = gsap.timeline({
         onComplete: () => {
           if (overlayRef.current) {
-             gsap.set(overlayRef.current, { visibility: 'hidden', opacity: 0 })
+            gsap.set(overlayRef.current, { visibility: 'hidden', opacity: 0 })
           }
         }
       })
 
       tl.to(contentRef.current, { opacity: 0, y: -10, duration: 0.3 })
-      tl.to(modalRef.current, { 
-        scaleY: 0.01, 
-        filter: 'blur(10px)', 
-        duration: 0.4, 
-        ease: 'power3.in' 
+      tl.to(modalRef.current, {
+        scaleY: 0.01,
+        filter: 'blur(10px)',
+        duration: 0.4,
+        ease: 'power3.in'
       })
       tl.to(modalRef.current, { scaleX: 0, opacity: 0, duration: 0.3, ease: 'power4.in' }, '-=0.1')
       tl.to(overlayRef.current, { opacity: 0, duration: 0.3 }, '-=0.2')
@@ -80,14 +80,14 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
   }, [onClose])
 
   return (
-    <div 
+    <div
       ref={overlayRef}
       className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 invisible opacity-0"
       onClick={onClose}
     >
-      <div 
+      <div
         ref={modalRef}
-        className="relative w-full max-w-lg bg-panel border border-primary/40 shadow-[0_0_40px_rgba(233,68,11,0.1)] rounded-sm overflow-hidden pointer-events-auto"
+        className="relative w-full max-w-xl bg-panel border border-primary/40 shadow-[0_0_40px_rgba(233,68,11,0.1)] rounded-sm overflow-hidden pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
         style={{ transformOrigin: 'center' }}
       >
@@ -106,7 +106,7 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
             <span className="opacity-60">[PROMPT_SESSION_L4]</span>
             <span className="animate-pulse">{title}</span>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="hover:bg-primary/20 bg-primary/10 px-2 py-0.5 transition-colors cursor-pointer text-[8px]"
           >
@@ -115,7 +115,7 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
         </div>
 
         {/* Content Area */}
-        <div 
+        <div
           ref={contentRef}
           className="relative z-10 p-6 pt-8 font-mono"
         >
@@ -124,11 +124,11 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
 
         {/* Terminal Footer */}
         <div className="flex items-center justify-between px-6 py-4 bg-black/40 border-t border-primary/10 font-pixel text-[8px] text-muted-foreground uppercase z-10">
-           <div className="flex items-center gap-2">
-             <span>$ SEARCH_STATUS: LISTENING</span>
-             <div className="w-1.5 h-3 bg-accent animate-[blink_1s_infinite]" />
-           </div>
-           <span>CRC: 0x82A1</span>
+          <div className="flex items-center gap-2">
+            <span>$ SEARCH_STATUS: LISTENING</span>
+            <div className="w-1.5 h-3 bg-accent animate-[blink_1s_infinite]" />
+          </div>
+          <span>CRC: 0x82A1</span>
         </div>
 
         {/* Footer Accent */}

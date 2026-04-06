@@ -2,21 +2,45 @@
 
 import { useGLTF } from '@react-three/drei'
 import { useEffect, useMemo } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
+import { PixelationShader } from '../effects/PixelationEffect'
 import { ASSETS } from './AssetLoader'
 import { useModelStore } from '../../../store/useModelstore'
 
 export default function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
 
-  const { pcd, loadPCD } = useModelStore()
+  const { pcd } = useModelStore()
+  const { gl, scene: threeScene, camera, size } = useThree()
 
-  /* ------------------------------------------------------------ */
-  /* 🔥 LOAD ONCE */
-  /* ------------------------------------------------------------ */
+  const composer = useMemo(() => {
+    const comp = new EffectComposer(gl)
+    const renderPass = new RenderPass(threeScene, camera)
+    comp.addPass(renderPass)
+
+    const pixelPass = new ShaderPass(PixelationShader)
+    pixelPass.uniforms.uResolution.value.set(size.width, size.height)
+    pixelPass.uniforms.uPixelSize.value = 16.0
+    comp.addPass(pixelPass)
+
+    return comp
+  }, [gl, threeScene, camera])
+
   useEffect(() => {
-    loadPCD()
-  }, [loadPCD])
+    const pixelPass = composer.passes[1] as any
+    if (pixelPass) {
+      pixelPass.uniforms.uResolution.value.set(size.width, size.height)
+    }
+    composer.setSize(size.width, size.height)
+  }, [size, composer])
+
+  useFrame(() => {
+    composer.render()
+  }, 1)
 
   /* ------------------------------------------------------------ */
   /* 🔥 PROCESS ONLY WHEN READY */
