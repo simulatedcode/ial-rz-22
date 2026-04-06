@@ -6,7 +6,7 @@ import { Uniform, Vector2 } from 'three'
 
 import { ternaryPassShader } from '@/shaders/ternary-pass'
 
-class TernaryEffect extends Effect {
+export class TernaryEffect extends Effect {
   constructor({
     threshold = 0.15,
     debug = 0,

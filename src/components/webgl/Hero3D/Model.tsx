@@ -1,129 +1,89 @@
 'use client'
 
 import { useGLTF } from '@react-three/drei'
-import { useEffect, useMemo } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useEffect, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
-import { PixelationShader } from '../effects/PixelationEffect'
 import { ASSETS } from './AssetLoader'
-import { useModelStore } from '../../../store/useModelstore'
+import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
 
 export default function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
 
-  const { pcd } = useModelStore()
-  const { gl, scene: threeScene, camera, size } = useThree()
-
-  const composer = useMemo(() => {
-    const comp = new EffectComposer(gl)
-    const renderPass = new RenderPass(threeScene, camera)
-    comp.addPass(renderPass)
-
-    const pixelPass = new ShaderPass(PixelationShader)
-    pixelPass.uniforms.uResolution.value.set(size.width, size.height)
-    pixelPass.uniforms.uPixelSize.value = 16.0
-    comp.addPass(pixelPass)
-
-    return comp
-  }, [gl, threeScene, camera])
+  const groupRef = useRef<THREE.Group>(null)
 
   useEffect(() => {
-    const pixelPass = composer.passes[1] as any
-    if (pixelPass) {
-      pixelPass.uniforms.uResolution.value.set(size.width, size.height)
-    }
-    composer.setSize(size.width, size.height)
-  }, [size, composer])
+    if (!groupRef.current) return
 
-  useFrame(() => {
-    composer.render()
-  }, 1)
+    // 🔥 PERFORMANCE: Cache converted materials so we don't spam ShaderCompilations!
+    // GLTFs often have 50+ meshes that share the exact same 1 or 2 original materials.
+    const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
 
-  /* ------------------------------------------------------------ */
-  /* 🔥 PROCESS ONLY WHEN READY */
-  /* ------------------------------------------------------------ */
-  const processedScene = useMemo(() => {
-    const clone = scene.clone(true)
-
-    if (!pcd) return clone
-
-    clone.traverse((child) => {
+    groupRef.current.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
-      if (child.name !== 'Body') return
+      child.castShadow = true
+      child.receiveShadow = true
 
-      // Allow frustum culling on other meshes, but disable it for Body because displacementMap pushes vertices out of bounds
-      child.frustumCulled = false
+      const oldMat = child.material as THREE.MeshStandardMaterial
+      if (!oldMat) return
 
-      const geometry = child.geometry.clone()
+      // 🔥 FIX texture orientation (important for GLTF)
+      oldMat.map?.flipY === false || (oldMat.map && (oldMat.map.flipY = false))
 
-      const bbox = new THREE.Box3().setFromBufferAttribute(
-        geometry.getAttribute('position')
-      )
-
-      const size = new THREE.Vector3()
-      bbox.getSize(size)
-
-      const textureSize = 256
-
-      const displacementData = new Float32Array(textureSize * textureSize)
-      const colorData = new Uint8Array(textureSize * textureSize * 4)
-
-      // 🔥 FAST LOOP
-      for (let i = 0; i < pcd.count; i++) {
-        const px = pcd.positions[i * 3]
-        const py = pcd.positions[i * 3 + 1]
-        const pz = pcd.positions[i * 3 + 2]
-
-        const uvX = Math.floor(((px - bbox.min.x) / size.x) * textureSize)
-        const uvY = Math.floor(((py - bbox.min.y) / size.y) * textureSize)
-
-        if (uvX < 0 || uvX >= textureSize || uvY < 0 || uvY >= textureSize) continue
-
-        const idx = uvY * textureSize + uvX
-
-        displacementData[idx] = (pz - bbox.min.z) / size.z
-
-        const ci = idx * 4
-        colorData[ci] = pcd.colors[i * 3] * 255
-        colorData[ci + 1] = pcd.colors[i * 3 + 1] * 255
-        colorData[ci + 2] = pcd.colors[i * 3 + 2] * 255
-        colorData[ci + 3] = 255
+      // If we already converted this exact material for another mesh, reuse it!
+      if (materialCache.has(oldMat.uuid)) {
+        child.material = materialCache.get(oldMat.uuid)
+        return
       }
 
-      const displacementTexture = new THREE.DataTexture(
-        displacementData,
-        textureSize,
-        textureSize,
-        THREE.RedFormat,
-        THREE.FloatType
-      )
-      displacementTexture.needsUpdate = true
+      // ✅ Plastic Toy Material
+      const newMat = new THREE.MeshPhysicalMaterial({
+        map: oldMat.map || null,
+        normalMap: oldMat.normalMap || null,
+        roughnessMap: oldMat.roughnessMap || null,
+        metalnessMap: oldMat.metalnessMap || null,
 
-      const colorTexture = new THREE.DataTexture(
-        colorData,
-        textureSize,
-        textureSize,
-        THREE.RGBAFormat
-      )
-      colorTexture.needsUpdate = true
+        color: '#ffffff',
 
-      child.material = new THREE.MeshStandardMaterial({
-        displacementMap: displacementTexture,
-        displacementScale: 0.1,
-        map: colorTexture,
+        // 🔥 plastic properties
+        roughness: 0.35,
+        metalness: 0.0,
+
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.15,
+
+        // ❌ no glass behavior
+        transmission: 0,
+        thickness: 0,
+        ior: 1.0,
+
+        transparent: false,
       })
-    })
 
-    return clone
-  }, [scene, pcd])
+      // 🔥 improve reflections (important for plastic look)
+      newMat.envMapIntensity = 1.2
+
+      child.material = newMat
+      materialCache.set(oldMat.uuid, newMat)
+
+      // 🔥 apply scan effect (no wrong casting)
+      applyScanMaterial(newMat)
+    })
+  }, [scene])
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    const range = 2.0
+
+    // 🔥 PERFORMANCE: Global O(1) uniform update instead of looping over every mesh shader!
+    sharedScanUniforms.uTime.value = t
+    sharedScanUniforms.uScanPosition.value = Math.sin(t * 0.2) * range
+  })
 
   return (
-    <group scale={2}>
-      <primitive object={processedScene} />
+    <group ref={groupRef} scale={1}>
+      <primitive object={scene} />
     </group>
   )
 }
