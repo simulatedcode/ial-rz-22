@@ -73,7 +73,7 @@ function CinematicLighting() {
   return (
     <>
       {/* 🌫️ VERY low ambient (keep contrast) */}
-      <ambientLight intensity={0.08} />
+      <ambientLight intensity={0.12} />
 
       {/* 🔥 KEY (white → defines form) */}
       <directionalLight

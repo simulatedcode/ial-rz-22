@@ -35,8 +35,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     // uThreshold changes slightly every frame, acting like a time variable.
     float stutter = rand1(uThreshold * 145.2); 
     // Randomly spike the intensity to make it unpredictable
-    float easeProg = pow(baseProgress, 2.0);
-    float progress = mix(easeProg, easeProg * stutter * 2.5, baseProgress);
+    // Using sqrt for a more persistent glitch as it recedes
+    float easeProg = (uThreshold > 0.4) ? pow(baseProgress, 1.2) : sqrt(baseProgress);
+    float progress = mix(easeProg, easeProg * stutter * 1.5, baseProgress);
     progress = clamp(progress, 0.0, 1.3); // allow clipping to overdrive
     
     vec2 pUv = uv;

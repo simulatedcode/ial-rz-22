@@ -58,7 +58,7 @@ export default function TransitionController({ effectRef }: TransitionController
     if (phase === 'exiting' && targetRoute) {
       const tl = timelineRegistry.getExitTimeline()
       if (tl) {
-        // shader effect
+        // shader effect (immediate)
         if (effectRef?.current) {
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) {
@@ -75,24 +75,24 @@ export default function TransitionController({ effectRef }: TransitionController
           const isGlass = mat.userData.isGlass === true
 
           if (isGlass) {
-            // 🪐 GLASS EXIT (DO NOT TOUCH OPACITY)
+            // 🪐 GLASS EXIT (slightly staggered)
             tl.to(mat, {
               transmission: 0.0,
               roughness: 0.6,
-              duration: 0.8,
-              ease: 'power2.inOut',
-            }, 0)
+              duration: 0.6, // faster fade
+              ease: 'power2.in',
+            }, 0.1)
           } else {
-            // 🧱 SOLID EXIT
+            // 🧱 SOLID EXIT (slightly staggered)
             tl.to(mat, {
               emissiveIntensity: 6.0,
               opacity: 0,
-              duration: 0.8,
-              ease: 'power2.inOut',
+              duration: 0.6, // faster fade
+              ease: 'power2.in',
               onStart: () => {
                 mat.transparent = true
               },
-            }, 0)
+            }, 0.1)
           }
         })
       }
@@ -104,12 +104,13 @@ export default function TransitionController({ effectRef }: TransitionController
     if (phase === 'entering') {
       const tl = timelineRegistry.getEnterTimeline()
       if (tl) {
+        // shader effect (immediate)
         if (effectRef?.current) {
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) {
             tl.to(uniform, {
               value: 0.15,
-              duration: 1.0,
+              duration: 1.4, // give it time to reveal the model
               ease: 'power3.out',
             }, 0)
           }
@@ -120,7 +121,7 @@ export default function TransitionController({ effectRef }: TransitionController
           const isGlass = mat.userData.isGlass === true
 
           if (isGlass) {
-            // 🪐 GLASS ENTER
+            // 🪐 GLASS ENTER (Sequential delay: 0.4s)
             mat.transmission = 0
             mat.roughness = 0.6
 
@@ -129,9 +130,9 @@ export default function TransitionController({ effectRef }: TransitionController
               roughness: mat.userData.originalRoughness ?? 0.05,
               duration: 1.0,
               ease: 'power3.out',
-            }, 0)
+            }, 0.4)
           } else {
-            // 🧱 SOLID ENTER
+            // 🧱 SOLID ENTER (Sequential delay: 0.4s)
             mat.transparent = true
             mat.opacity = 0
             mat.emissiveIntensity = 1.0
@@ -144,7 +145,7 @@ export default function TransitionController({ effectRef }: TransitionController
               onComplete: () => {
                 mat.transparent = mat.userData.originalTransparent
               },
-            }, 0)
+            }, 0.4)
           }
         })
       }
