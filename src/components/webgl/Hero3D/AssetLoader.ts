@@ -1,8 +1,6 @@
 'use client'
 
 import { useGLTF, useTexture } from '@react-three/drei'
-import { useMemo } from 'react'
-import * as THREE from 'three'
 
 /* =========================================================
    ASSET REGISTRY

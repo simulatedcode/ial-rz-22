@@ -20,6 +20,10 @@ export default function Model() {
     groupRef.current.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
+      // 🔥 PERFORMANCE: Only update matrices when requested
+      child.matrixAutoUpdate = false
+      child.updateMatrix()
+
       child.castShadow = true
       child.receiveShadow = true
 
@@ -56,17 +60,17 @@ export default function Model() {
           transparent: true,
           opacity: 1,
 
-          roughness: oldMat.roughness ?? 0.05,
+          roughness: oldMat.roughness ?? 0.02,
           metalness: 0,
 
           transmission: 1,
           thickness: 0.25, // 🔥 depth
           ior: 1.45,
 
-          clearcoat: 1.0,
-          clearcoatRoughness: 0,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.15,
 
-          envMapIntensity: 2.0,
+          envMapIntensity: 1.5,
           depthWrite: false,
         })
 
@@ -74,6 +78,7 @@ export default function Model() {
         newMat.attenuationColor = new THREE.Color('#F88863')
         newMat.attenuationDistance = 0.5
 
+        newMat.userData.isGlass = true
         // render priority fix
         child.renderOrder = 10
       } else {

@@ -64,6 +64,9 @@ export default function Header() {
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
           <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
         </div>
+        <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
+          <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
+        </nav>
         <button
           onClick={() => setIsContactOpen(true)}
           className='hidden sm:flex items-center gap-2 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground hover:text-accent transition-all duration-300 group cursor-pointer'
@@ -74,9 +77,6 @@ export default function Header() {
           </div>
           {coords}
         </button>
-        <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-          <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
-        </nav>
         <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
           {SITE_CONFIG.location}, --:-- {utc}
         </div>
@@ -89,6 +89,9 @@ export default function Header() {
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
         <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
       </div>
+      <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
+        <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
+      </nav>
       <button
         onClick={() => setIsContactOpen(true)}
         className='hidden sm:flex items-center gap-2 font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground hover:text-accent transition-all duration-300 group cursor-pointer'
@@ -104,9 +107,6 @@ export default function Header() {
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
       />
-      <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-        <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
-      </nav>
       <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
         {SITE_CONFIG.location}, {time} {utc}
       </div>
