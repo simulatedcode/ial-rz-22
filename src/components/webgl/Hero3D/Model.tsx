@@ -32,40 +32,52 @@ export default function Model() {
         oldMat.map.colorSpace = THREE.SRGBColorSpace
       }
 
-      // 🔥 reuse material if already processed
+      // 🔁 reuse material
       if (materialCache.has(oldMat.uuid)) {
         child.material = materialCache.get(oldMat.uuid)!
         return
       }
 
-      // 🔍 detect transparency from original material
-      const isTransparent =
-        oldMat.transparent === true || (oldMat.opacity ?? 1) < 1
-
       let newMat: THREE.MeshPhysicalMaterial
 
-      if (isTransparent) {
-        // ✅ GLASS / TRANSPARENT PARTS
+      /* =================================================
+         🔍 CORRECT GLASS DETECTION (IMPORTANT)
+      ================================================= */
+
+      const isGlass =
+        'transmission' in oldMat &&
+        (oldMat as any).transmission > 0
+
+      if (isGlass) {
+        // 🪐 REAL VISOR MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
 
           transparent: true,
-          opacity: oldMat.opacity ?? 0.6,
+          opacity: 1,
 
-          roughness: 0.1,
-          metalness: 0.0,
+          roughness: oldMat.roughness ?? 0.05,
+          metalness: 0,
 
-          transmission: 0.9,
-          thickness: 0.5,
+          transmission: 1,
+          thickness: 0.25, // 🔥 depth
           ior: 1.45,
 
-          depthWrite: false, // 🔥 critical
+          clearcoat: 1.0,
+          clearcoatRoughness: 0,
+
+          envMapIntensity: 2.0,
+          depthWrite: false,
         })
 
-        // ensure correct render order
+        // optional tint (remove if not needed)
+        newMat.attenuationColor = new THREE.Color('#F88863')
+        newMat.attenuationDistance = 0.5
+
+        // render priority fix
         child.renderOrder = 10
       } else {
-        // ✅ PLASTIC TOY MATERIAL
+        // 🧱 SOLID MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
           normalMap: oldMat.normalMap || null,
@@ -74,22 +86,23 @@ export default function Model() {
 
           color: '#ffffff',
 
-          roughness: 0.35,
+          roughness: 0.2,
           metalness: 0.0,
 
-          clearcoat: 0.6,
+          clearcoat: 0.5,
           clearcoatRoughness: 0.15,
 
-          transmission: 0,
+          transmission: 0.0,
           transparent: false,
+
+          envMapIntensity: 1.2,
         })
 
-        // apply scan only to solid parts
+        // 🔥 keep your scan system
         applyScanMaterial(newMat)
       }
 
-      // 🔥 improve reflections
-      newMat.envMapIntensity = 1.2
+      newMat.needsUpdate = true
 
       child.material = newMat
       materialCache.set(oldMat.uuid, newMat)
@@ -100,7 +113,6 @@ export default function Model() {
     const t = state.clock.elapsedTime
     const range = 2.0
 
-    // 🔥 global shader update
     sharedScanUniforms.uTime.value = t
     sharedScanUniforms.uScanPosition.value =
       Math.sin(t * 0.2) * range

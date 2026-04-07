@@ -70,7 +70,7 @@
                     "index" : 0
                 },
                 "metallicFactor" : 0,
-                "roughnessFactor" : 0.20000000298023224
+                "roughnessFactor" : 0.05000000074505806
             }
         },
         {
@@ -78,19 +78,19 @@
             "doubleSided" : true,
             "extensions" : {
                 "KHR_materials_transmission" : {
-                    "transmissionFactor" : 0.8999999761581421
+                    "transmissionFactor" : 1
                 }
             },
             "name" : "Material.001",
             "pbrMetallicRoughness" : {
                 "baseColorFactor" : [
-                    0.800000011920929,
-                    0.800000011920929,
-                    0.800000011920929,
+                    0.8000000715255737,
+                    0.41253426671028137,
+                    0,
                     0.6000000238418579
                 ],
                 "metallicFactor" : 0,
-                "roughnessFactor" : 0.20000000298023224
+                "roughnessFactor" : 0.05000000074505806
             }
         }
     ],

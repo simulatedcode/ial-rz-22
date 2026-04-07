@@ -75,8 +75,8 @@ export function applyScanMaterial(
       float noise = sin(vWorldPos.x * 10.0 + uTime * 5.0) * 0.02;
       scan += noise;
 
-      vec3 scanColor = uScanColor * scan * 1.2;
-      vec3 glowColor = uScanColor * glow * 0.2;
+      vec3 scanColor = uScanColor * scan * 2.2;
+      vec3 glowColor = uScanColor * glow * 0.4;
       vec3 edgeColor = uScanColor * edge * scan * 0.8;
 
       outgoingLight += scanColor + glowColor + edgeColor;

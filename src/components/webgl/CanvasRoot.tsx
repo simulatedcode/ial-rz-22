@@ -67,7 +67,7 @@ function CinematicLighting() {
     )
 
     // 🔥 subtle flicker for life
-    keyLight.current.intensity = 1.8 + Math.sin(t * 6) * 0.05
+    keyLight.current.intensity = 1.8 + Math.sin(t * 16) * 0.05
   })
 
   return (
@@ -78,7 +78,7 @@ function CinematicLighting() {
       {/* 🔥 KEY (white → defines form) */}
       <directionalLight
         ref={keyLight}
-        intensity={1.8}
+        intensity={1.85}
         color="#ffffff"
         castShadow
       />
@@ -95,7 +95,7 @@ function CinematicLighting() {
       {/* 💡 FILL (low + colored) */}
       <pointLight
         ref={fillLight}
-        intensity={0.4}
+        intensity={0.6}
         color="#ff2a5f"
       />
     </>

@@ -13,10 +13,29 @@ export default function TransitionController({ effectRef }: TransitionController
   const { scene } = useThree()
 
   useEffect(() => {
-    // Collect meshes
-    const meshes: THREE.Mesh[] = []
+    // Collect unique materials
+    const materials = new Set<THREE.MeshStandardMaterial>()
     scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) meshes.push(child)
+      if (child instanceof THREE.Mesh) {
+        const addMaterial = (m: THREE.Material) => {
+          if (m instanceof THREE.MeshStandardMaterial) {
+            materials.add(m)
+          }
+        }
+
+        if (Array.isArray(child.material)) {
+          child.material.forEach(addMaterial)
+        } else {
+          addMaterial(child.material)
+        }
+      }
+    })
+
+    // Save original transparency state
+    materials.forEach((mat) => {
+      if (mat.userData.originalTransparent === undefined) {
+        mat.userData.originalTransparent = mat.transparent
+      }
     })
 
     // Exit
@@ -27,17 +46,14 @@ export default function TransitionController({ effectRef }: TransitionController
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) tl.to(uniform, { value: 0.85, duration: 0.6, ease: 'power2.in' }, 0)
         }
-        meshes.forEach((mesh) => {
-          const mat = mesh.material as THREE.MeshStandardMaterial
-          if (mat) {
-            tl.to(mat, {
-              emissiveIntensity: 6.0,
-              opacity: 0,
-              duration: 0.7,
-              ease: 'power2.in',
-              onStart: () => { mat.transparent = true }
-            }, 0)
-          }
+        materials.forEach((mat) => {
+          tl.to(mat, {
+            emissiveIntensity: 6.0,
+            opacity: 0,
+            duration: 0.7,
+            ease: 'power2.in',
+            onStart: () => { mat.transparent = true }
+          }, 0)
         })
       }
     }
@@ -50,20 +66,17 @@ export default function TransitionController({ effectRef }: TransitionController
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) tl.to(uniform, { value: 0.15, duration: 1.2, ease: 'power3.out' }, 0.1)
         }
-        meshes.forEach((mesh) => {
-          const mat = mesh.material as THREE.MeshStandardMaterial
-          if (mat) {
-            mat.transparent = true
-            mat.opacity = 0
-            mat.emissiveIntensity = 8.0
-            tl.to(mat, {
-              emissiveIntensity: 0.5,
-              opacity: 1,
-              duration: 1.4,
-              ease: 'power4.out',
-              onComplete: () => { mat.transparent = false }
-            }, 0.3)
-          }
+        materials.forEach((mat) => {
+          mat.transparent = true
+          mat.opacity = 0
+          mat.emissiveIntensity = 2.0
+          tl.to(mat, {
+            emissiveIntensity: 0.5,
+            opacity: 1,
+            duration: 1.4,
+            ease: 'power4.out',
+            onComplete: () => { mat.transparent = mat.userData.originalTransparent }
+          }, 0.3)
         })
       }
     }
