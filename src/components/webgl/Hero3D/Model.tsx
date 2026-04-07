@@ -15,8 +15,6 @@ export default function Model() {
   useEffect(() => {
     if (!groupRef.current) return
 
-    // 🔥 PERFORMANCE: Cache converted materials so we don't spam ShaderCompilations!
-    // GLTFs often have 50+ meshes that share the exact same 1 or 2 original materials.
     const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
 
     groupRef.current.traverse((child) => {
@@ -28,47 +26,73 @@ export default function Model() {
       const oldMat = child.material as THREE.MeshStandardMaterial
       if (!oldMat) return
 
-      // 🔥 FIX texture orientation (important for GLTF)
-      oldMat.map?.flipY === false || (oldMat.map && (oldMat.map.flipY = false))
+      // 🔥 Fix GLTF textures
+      if (oldMat.map) {
+        oldMat.map.flipY = false
+        oldMat.map.colorSpace = THREE.SRGBColorSpace
+      }
 
-      // If we already converted this exact material for another mesh, reuse it!
+      // 🔥 reuse material if already processed
       if (materialCache.has(oldMat.uuid)) {
-        child.material = materialCache.get(oldMat.uuid)
+        child.material = materialCache.get(oldMat.uuid)!
         return
       }
 
-      // ✅ Plastic Toy Material
-      const newMat = new THREE.MeshPhysicalMaterial({
-        map: oldMat.map || null,
-        normalMap: oldMat.normalMap || null,
-        roughnessMap: oldMat.roughnessMap || null,
-        metalnessMap: oldMat.metalnessMap || null,
+      // 🔍 detect transparency from original material
+      const isTransparent =
+        oldMat.transparent === true || (oldMat.opacity ?? 1) < 1
 
-        color: '#ffffff',
+      let newMat: THREE.MeshPhysicalMaterial
 
-        // 🔥 plastic properties
-        roughness: 0.35,
-        metalness: 0.0,
+      if (isTransparent) {
+        // ✅ GLASS / TRANSPARENT PARTS
+        newMat = new THREE.MeshPhysicalMaterial({
+          map: oldMat.map || null,
 
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.15,
+          transparent: true,
+          opacity: oldMat.opacity ?? 0.6,
 
-        // ❌ no glass behavior
-        transmission: 0,
-        thickness: 0,
-        ior: 1.0,
+          roughness: 0.1,
+          metalness: 0.0,
 
-        transparent: false,
-      })
+          transmission: 0.9,
+          thickness: 0.5,
+          ior: 1.45,
 
-      // 🔥 improve reflections (important for plastic look)
+          depthWrite: false, // 🔥 critical
+        })
+
+        // ensure correct render order
+        child.renderOrder = 10
+      } else {
+        // ✅ PLASTIC TOY MATERIAL
+        newMat = new THREE.MeshPhysicalMaterial({
+          map: oldMat.map || null,
+          normalMap: oldMat.normalMap || null,
+          roughnessMap: oldMat.roughnessMap || null,
+          metalnessMap: oldMat.metalnessMap || null,
+
+          color: '#ffffff',
+
+          roughness: 0.35,
+          metalness: 0.0,
+
+          clearcoat: 0.6,
+          clearcoatRoughness: 0.15,
+
+          transmission: 0,
+          transparent: false,
+        })
+
+        // apply scan only to solid parts
+        applyScanMaterial(newMat)
+      }
+
+      // 🔥 improve reflections
       newMat.envMapIntensity = 1.2
 
       child.material = newMat
       materialCache.set(oldMat.uuid, newMat)
-
-      // 🔥 apply scan effect (no wrong casting)
-      applyScanMaterial(newMat)
     })
   }, [scene])
 
@@ -76,9 +100,10 @@ export default function Model() {
     const t = state.clock.elapsedTime
     const range = 2.0
 
-    // 🔥 PERFORMANCE: Global O(1) uniform update instead of looping over every mesh shader!
+    // 🔥 global shader update
     sharedScanUniforms.uTime.value = t
-    sharedScanUniforms.uScanPosition.value = Math.sin(t * 0.2) * range
+    sharedScanUniforms.uScanPosition.value =
+      Math.sin(t * 0.2) * range
   })
 
   return (
