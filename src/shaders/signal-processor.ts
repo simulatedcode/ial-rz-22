@@ -19,10 +19,20 @@ float packSignal(float signal) {
 }
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-
+    // 🔥 Pixelation intensity
+    float pixelSize = 6.0;
+    vec2 pUv = floor(uv * uResolution / pixelSize) * pixelSize / uResolution;
+    
+    // Note: Since we can't easily re-sample inputColor in mainImage, 
+    // we lean on the fact that TernaryPass will process this.
+    // However, to get a blocky effect, we can quantize the luminance itself.
+    
     vec3 col = inputColor.rgb;
-
     float lum = luminance(col);
+    
+    // Quantize luminance to create distinct digital "bands"
+    lum = floor(lum * 8.0) / 8.0;
+
     float signal = encodeSignal(lum);
     float packed = packSignal(signal);
 

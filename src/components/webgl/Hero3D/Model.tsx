@@ -1,105 +1,131 @@
 'use client'
 
 import { useGLTF } from '@react-three/drei'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
-import { useModelStore } from '../../../store/useModelstore'
+import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
 
 export default function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
 
-  const { pcd, loadPCD } = useModelStore()
+  const groupRef = useRef<THREE.Group>(null)
 
-  /* ------------------------------------------------------------ */
-  /* 🔥 LOAD ONCE */
-  /* ------------------------------------------------------------ */
   useEffect(() => {
-    loadPCD()
-  }, [loadPCD])
+    if (!groupRef.current) return
 
-  /* ------------------------------------------------------------ */
-  /* 🔥 PROCESS ONLY WHEN READY */
-  /* ------------------------------------------------------------ */
-  const processedScene = useMemo(() => {
-    const clone = scene.clone(true)
+    const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
 
-    if (!pcd) return clone
-
-    clone.traverse((child) => {
+    groupRef.current.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
-      if (child.name !== 'Body') return
+      // 🔥 PERFORMANCE: Only update matrices when requested
+      child.matrixAutoUpdate = false
+      child.updateMatrix()
 
-      // Allow frustum culling on other meshes, but disable it for Body because displacementMap pushes vertices out of bounds
-      child.frustumCulled = false
+      child.castShadow = true
+      child.receiveShadow = true
 
-      const geometry = child.geometry.clone()
+      const oldMat = child.material as THREE.MeshStandardMaterial
+      if (!oldMat) return
 
-      const bbox = new THREE.Box3().setFromBufferAttribute(
-        geometry.getAttribute('position')
-      )
-
-      const size = new THREE.Vector3()
-      bbox.getSize(size)
-
-      const textureSize = 256
-
-      const displacementData = new Float32Array(textureSize * textureSize)
-      const colorData = new Uint8Array(textureSize * textureSize * 4)
-
-      // 🔥 FAST LOOP
-      for (let i = 0; i < pcd.count; i++) {
-        const px = pcd.positions[i * 3]
-        const py = pcd.positions[i * 3 + 1]
-        const pz = pcd.positions[i * 3 + 2]
-
-        const uvX = Math.floor(((px - bbox.min.x) / size.x) * textureSize)
-        const uvY = Math.floor(((py - bbox.min.y) / size.y) * textureSize)
-
-        if (uvX < 0 || uvX >= textureSize || uvY < 0 || uvY >= textureSize) continue
-
-        const idx = uvY * textureSize + uvX
-
-        displacementData[idx] = (pz - bbox.min.z) / size.z
-
-        const ci = idx * 4
-        colorData[ci] = pcd.colors[i * 3] * 255
-        colorData[ci + 1] = pcd.colors[i * 3 + 1] * 255
-        colorData[ci + 2] = pcd.colors[i * 3 + 2] * 255
-        colorData[ci + 3] = 255
+      // 🔥 Fix GLTF textures
+      if (oldMat.map) {
+        oldMat.map.flipY = false
+        oldMat.map.colorSpace = THREE.SRGBColorSpace
       }
 
-      const displacementTexture = new THREE.DataTexture(
-        displacementData,
-        textureSize,
-        textureSize,
-        THREE.RedFormat,
-        THREE.FloatType
-      )
-      displacementTexture.needsUpdate = true
+      // 🔁 reuse material
+      if (materialCache.has(oldMat.uuid)) {
+        child.material = materialCache.get(oldMat.uuid)!
+        return
+      }
 
-      const colorTexture = new THREE.DataTexture(
-        colorData,
-        textureSize,
-        textureSize,
-        THREE.RGBAFormat
-      )
-      colorTexture.needsUpdate = true
+      let newMat: THREE.MeshPhysicalMaterial
 
-      child.material = new THREE.MeshStandardMaterial({
-        displacementMap: displacementTexture,
-        displacementScale: 0.1,
-        map: colorTexture,
-      })
+      /* =================================================
+         🔍 CORRECT GLASS DETECTION (IMPORTANT)
+      ================================================= */
+
+      const isGlass =
+        'transmission' in oldMat &&
+        (oldMat as any).transmission > 0
+
+      if (isGlass) {
+        // 🪐 REAL VISOR MATERIAL
+        newMat = new THREE.MeshPhysicalMaterial({
+          map: oldMat.map || null,
+
+          transparent: true,
+          opacity: 1,
+
+          roughness: oldMat.roughness ?? 0.02,
+          metalness: 0,
+
+          transmission: 1,
+          thickness: 0.25, // 🔥 depth
+          ior: 1.45,
+
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.15,
+
+          envMapIntensity: 1.5,
+          depthWrite: false,
+        })
+
+        // optional tint (remove if not needed)
+        newMat.attenuationColor = new THREE.Color('#F88863')
+        newMat.attenuationDistance = 0.5
+
+        newMat.userData.isGlass = true
+        // render priority fix
+        child.renderOrder = 10
+      } else {
+        // 🧱 SOLID MATERIAL
+        newMat = new THREE.MeshPhysicalMaterial({
+          map: oldMat.map || null,
+          normalMap: oldMat.normalMap || null,
+          roughnessMap: oldMat.roughnessMap || null,
+          metalnessMap: oldMat.metalnessMap || null,
+
+          color: '#ffffff',
+
+          roughness: 0.2,
+          metalness: 0.0,
+
+          clearcoat: 0.5,
+          clearcoatRoughness: 0.15,
+
+          transmission: 0.0,
+          transparent: false,
+
+          envMapIntensity: 1.2,
+        })
+
+        // 🔥 keep your scan system
+        applyScanMaterial(newMat)
+      }
+
+      newMat.needsUpdate = true
+
+      child.material = newMat
+      materialCache.set(oldMat.uuid, newMat)
     })
+  }, [scene])
 
-    return clone
-  }, [scene, pcd])
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    const range = 2.0
+
+    sharedScanUniforms.uTime.value = t
+    sharedScanUniforms.uScanPosition.value =
+      Math.sin(t * 0.2) * range
+  })
 
   return (
-    <group scale={2}>
-      <primitive object={processedScene} />
+    <group ref={groupRef} scale={1}>
+      <primitive object={scene} />
     </group>
   )
 }

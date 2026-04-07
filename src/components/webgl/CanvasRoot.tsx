@@ -5,9 +5,9 @@ import { useFrame } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-import { Model } from './Model'
+import Model from './Hero3D/Model'
 import { SignalProcessor } from './SignalProcessor'
-import { TernaryPass } from './TernaryPass'
+import { TernaryEffect, TernaryPass } from './TernaryPass'
 import TransitionController from './TransitionController'
 import { useTransitionStore } from '@/store/useTransitionStore'
 
@@ -29,20 +29,74 @@ function RotatingCamera() {
 }
 
 function CinematicLighting() {
+  const keyLight = useRef<THREE.DirectionalLight>(null)
+  const rimLight = useRef<THREE.DirectionalLight>(null)
+  const fillLight = useRef<THREE.PointLight>(null)
+  const target = useRef<THREE.Object3D>(null)
+
+  useFrame((state) => {
+    if (!keyLight.current || !rimLight.current || !fillLight.current || !target.current) return
+
+    const t = state.clock.elapsedTime
+
+    const cx = state.camera.position.x
+    const cz = state.camera.position.z
+    const angle = Math.atan2(cz, cx)
+    const back = angle + Math.PI
+
+    // 🔥 KEY LIGHT (main sculpting light)
+    keyLight.current.position.set(
+      Math.cos(back - 0.5) * 6,
+      3 + Math.sin(t * 0.3) * 0.8,
+      Math.sin(back - 0.5) * 6
+    )
+    keyLight.current.target = target.current
+
+    // 🔥 RIM LIGHT (tight edge highlight)
+    rimLight.current.position.set(
+      Math.cos(back + 0.5) * 5,
+      1.5,
+      Math.sin(back + 0.5) * 5
+    )
+
+    // 🔥 FILL LIGHT (very subtle, just to avoid full black)
+    fillLight.current.position.set(
+      Math.cos(back) * 3,
+      -1.5,
+      Math.sin(back) * 3
+    )
+
+    // 🔥 subtle flicker for life
+    keyLight.current.intensity = 1.8 + Math.sin(t * 16) * 0.05
+  })
+
   return (
     <>
-      {/* 🔥 increase ambient */}
-      <ambientLight intensity={0.6} />
+      {/* 🌫️ VERY low ambient (keep contrast) */}
+      <ambientLight intensity={0.12} />
 
+      {/* 🔥 KEY (white → defines form) */}
       <directionalLight
-        position={[5, 5, 5]}
-        intensity={1.0} // 🔥 stronger
+        ref={keyLight}
+        intensity={1.85}
+        color="#ffffff"
+        castShadow
       />
 
+      <object3D ref={target} position={[0, 0, 0]} />
+
+      {/* 🔥 RIM (cyan → scan synergy) */}
+      <directionalLight
+        ref={rimLight}
+        intensity={2.2}
+        color="#00ffff"
+      />
+
+      {/* 💡 FILL (low + colored) */}
       <pointLight
-        position={[0, -2, 3]}
-        intensity={0.4} // 🔥 stronger
-        color="#4a9eff"
+        ref={fillLight}
+        intensity={0.6}
+        color="#ff2a5f"
       />
     </>
   )
@@ -66,7 +120,7 @@ function CenteredModel() {
 }
 
 export default function CanvasRoot() {
-  const ternaryRef = useRef<any>(null)
+  const ternaryRef = useRef<TernaryEffect>(null)
 
   return (
     <>
@@ -82,7 +136,7 @@ export default function CanvasRoot() {
       {/* 🔥 Pipeline */}
       <EffectComposer multisampling={0}>
         <SignalProcessor />
-        <TernaryPass ref={ternaryRef} threshold={0.15} debug={0} />
+        <TernaryPass ref={ternaryRef} threshold={0.25} debug={0} />
       </EffectComposer>
     </>
   )
