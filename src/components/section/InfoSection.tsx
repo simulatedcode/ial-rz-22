@@ -8,13 +8,13 @@ export default function Info() {
             <div className="hidden lg:block" />
 
             {/* RIGHT COLUMN (content) */}
-            <div className="flex py-20 px-6 lg:px-16">
+            <div className="flex items-center justify-center">
 
-                <div className="max-w-xl w-full">
+                <div className="max-w-4xl w-full px-16">
 
                     {/* Title */}
                     <div className="font-pixel uppercase tracking-widest">
-                        <h2 className="text-4xl sm:text-5xl lg:text-6xl leading-tight text-primary drop-shadow-[0_0_8px_var(--color-flame-500)]">
+                        <h2 className="text-base sm:text-lg lg:text-xl leading-tight text-primary drop-shadow-[0_0_8px_var(--color-flame-500)]">
                             About Project
                         </h2>
                     </div>

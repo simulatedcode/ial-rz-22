@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useSyncExternalStore } from 'react'
 import TransitionLink from '@/components/ui/TransitionLink'
-import ContactModal from '@/components/ui/ContactModal'
+import ContactModal from '@/components/ui/Contact/ContactModal'
 
 const SITE_CONFIG = {
   location: 'YK',
