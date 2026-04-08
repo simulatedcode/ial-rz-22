@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo, useSyncExternalStore } from 'react'
 import TransitionLink from '@/components/ui/TransitionLink'
 import ContactModal from '@/components/ui/ContactModal'
 
@@ -18,45 +17,37 @@ function formatCoordinate(value: number, type: 'lat' | 'lng'): string {
 }
 
 export default function Header() {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false
+  )
   const [time, setTime] = useState('--:--')
-  // Asia/Jakarta is technically always UTC+7
-  const [utc, setUtc] = useState('UTC+7')
   const [isContactOpen, setIsContactOpen] = useState(false)
+  const utc = 'UTC+7'
 
   const coords = useMemo(() =>
     `${formatCoordinate(SITE_CONFIG.latitude, 'lat')}, ${formatCoordinate(SITE_CONFIG.longitude, 'lng')}`,
     [])
 
   useEffect(() => {
-    setMounted(true)
-
     const updateTime = () => {
       const now = new Date()
-      // Display time in the set timezone
       setTime(now.toLocaleTimeString('en-US', {
         timeZone: SITE_CONFIG.timezone,
         hour12: true,
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }))
-
-      // Calculate realistic offset for target timezone instead of local system offset.
-      // This is a rough estimation trick, though setting a static UTC+7 for Jakarta is safer.
-      const tzString = new Date().toLocaleString("en-US", { timeZone: SITE_CONFIG.timezone });
-      const localString = new Date().toLocaleString("en-US");
-      // For performance & correctness we just fall back to rendering the static UTC+7 
-      // but if you have multiple timezones, you can calculate diff here.
     }
 
     updateTime()
-    // Since we only display hours and minutes, a 1-second interval is unnecessarily 
-    // re-rendering the component 60 times a minute. We can safely drop this to 10 seconds.
     const interval = setInterval(updateTime, 10000)
+
     return () => clearInterval(interval)
   }, [])
 
-  const layoutClasses = "fixed top-0 left-0 right-0 z-100 flex items-center justify-between mx-auto max-w-full px-8 py-8"
+  const layoutClasses = 'fixed top-0 left-0 right-0 z-100 flex items-center justify-between mx-auto max-w-full px-8 py-8'
 
   if (!mounted) {
     return (

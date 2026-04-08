@@ -1,26 +1,27 @@
 'use client'
 
 import { useGLTF } from '@react-three/drei'
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
 
-export default function Model() {
+export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
-
   const groupRef = useRef<THREE.Group>(null)
+  const modelScene = useMemo(() => scene.clone(true), [scene])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!groupRef.current) return
+
+    groupRef.current.visible = false
 
     const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
 
     groupRef.current.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
-      // 🔥 PERFORMANCE: Only update matrices when requested
       child.matrixAutoUpdate = false
       child.updateMatrix()
 
@@ -30,13 +31,11 @@ export default function Model() {
       const oldMat = child.material as THREE.MeshStandardMaterial
       if (!oldMat) return
 
-      // 🔥 Fix GLTF textures
       if (oldMat.map) {
         oldMat.map.flipY = false
         oldMat.map.colorSpace = THREE.SRGBColorSpace
       }
 
-      // 🔁 reuse material
       if (materialCache.has(oldMat.uuid)) {
         child.material = materialCache.get(oldMat.uuid)!
         return
@@ -44,16 +43,11 @@ export default function Model() {
 
       let newMat: THREE.MeshPhysicalMaterial
 
-      /* =================================================
-         🔍 CORRECT GLASS DETECTION (IMPORTANT)
-      ================================================= */
-
       const isGlass =
         'transmission' in oldMat &&
-        (oldMat as any).transmission > 0
+        (oldMat as THREE.MeshPhysicalMaterial).transmission > 0
 
       if (isGlass) {
-        // 🪐 REAL VISOR MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
 
@@ -64,7 +58,7 @@ export default function Model() {
           metalness: 0,
 
           transmission: 1,
-          thickness: 0.25, // 🔥 depth
+          thickness: 0.25,
           ior: 1.45,
 
           clearcoat: 0.8,
@@ -74,15 +68,12 @@ export default function Model() {
           depthWrite: false,
         })
 
-        // optional tint (remove if not needed)
         newMat.attenuationColor = new THREE.Color('#F88863')
         newMat.attenuationDistance = 0.5
 
         newMat.userData.isGlass = true
-        // render priority fix
         child.renderOrder = 10
       } else {
-        // 🧱 SOLID MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
           normalMap: oldMat.normalMap || null,
@@ -103,7 +94,6 @@ export default function Model() {
           envMapIntensity: 1.2,
         })
 
-        // 🔥 keep your scan system
         applyScanMaterial(newMat)
       }
 
@@ -112,7 +102,9 @@ export default function Model() {
       child.material = newMat
       materialCache.set(oldMat.uuid, newMat)
     })
-  }, [scene])
+
+    groupRef.current.visible = true
+  }, [modelScene])
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
@@ -125,7 +117,7 @@ export default function Model() {
 
   return (
     <group ref={groupRef} scale={1}>
-      <primitive object={scene} />
+      <primitive object={modelScene} />
     </group>
   )
 }

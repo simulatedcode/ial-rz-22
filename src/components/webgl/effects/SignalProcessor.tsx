@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Effect } from 'postprocessing'
 import { Uniform, Vector2 } from 'three'
 
@@ -27,9 +27,7 @@ class SignalProcessorEffect extends Effect {
   }
 }
 
-export const SignalProcessor = forwardRef<SignalProcessorEffect>((_, ref) => {
+export function SignalProcessor() {
   const effect = useMemo(() => new SignalProcessorEffect(), [])
-  return <primitive ref={ref} object={effect} />
-})
-
-SignalProcessor.displayName = 'SignalProcessor'
+  return <primitive object={effect} />
+}

@@ -1,30 +1,67 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useLayoutEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
-import Model from './Hero3D/Model'
-import { SignalProcessor } from './SignalProcessor'
-import { TernaryEffect, TernaryPass } from './TernaryPass'
-import TransitionController from './TransitionController'
+import { Model } from './assets/Model'
+import { SignalProcessor } from './effects/SignalProcessor'
+import { TernaryPass, TernaryEffect } from './effects/TernaryPass'
+import {
+  ScrollController,
+  START_CAMERA_POSITION,
+  START_LOOK_AT,
+} from './controllers/Scroll'
+import { TransitionController } from './controllers/Transition'
 import { useTransitionStore } from '@/store/useTransitionStore'
 
 function RotatingCamera() {
   const phase = useTransitionStore((state) => state.phase)
 
-  useFrame((state) => {
-    // Only rotate if we are not in a hard transition
+  useFrame((state, delta) => {
+    const isScrolling =
+      typeof window !== 'undefined' && window.scrollY > 5
+
+    const scrollBlend =
+      typeof window === 'undefined'
+        ? 0
+        : THREE.MathUtils.clamp(window.scrollY / 96, 0, 1)
+
+    const angle = state.clock.elapsedTime * 0.2
+    const radius = 4
+    const orbitX = Math.sin(angle) * radius
+    const orbitZ = Math.cos(angle) * radius
+    const blendTargetX = THREE.MathUtils.lerp(orbitX, START_CAMERA_POSITION.x, scrollBlend)
+    const blendTargetY = THREE.MathUtils.lerp(0, START_CAMERA_POSITION.y, scrollBlend)
+    const blendTargetZ = THREE.MathUtils.lerp(orbitZ, START_CAMERA_POSITION.z, scrollBlend)
+
     if (phase === 'idle') {
-      const angle = state.clock.elapsedTime * 0.2
-      const radius = 4
-      state.camera.position.x = Math.sin(angle) * radius
-      state.camera.position.z = Math.cos(angle) * radius
-      state.camera.position.y = 0.5
-      state.camera.lookAt(0, 0, 0)
+      const damping = isScrolling ? 14 : 6
+
+      state.camera.position.x = THREE.MathUtils.damp(
+        state.camera.position.x,
+        blendTargetX,
+        damping,
+        delta
+      )
+      state.camera.position.y = THREE.MathUtils.damp(
+        state.camera.position.y,
+        blendTargetY,
+        damping,
+        delta
+      )
+      state.camera.position.z = THREE.MathUtils.damp(
+        state.camera.position.z,
+        blendTargetZ,
+        damping,
+        delta
+      )
+
+      state.camera.lookAt(START_LOOK_AT)
     }
   })
+
   return null
 }
 
@@ -44,7 +81,6 @@ function CinematicLighting() {
     const angle = Math.atan2(cz, cx)
     const back = angle + Math.PI
 
-    // 🔥 KEY LIGHT (main sculpting light)
     keyLight.current.position.set(
       Math.cos(back - 0.5) * 6,
       3 + Math.sin(t * 0.3) * 0.8,
@@ -52,30 +88,25 @@ function CinematicLighting() {
     )
     keyLight.current.target = target.current
 
-    // 🔥 RIM LIGHT (tight edge highlight)
     rimLight.current.position.set(
       Math.cos(back + 0.5) * 5,
       1.5,
       Math.sin(back + 0.5) * 5
     )
 
-    // 🔥 FILL LIGHT (very subtle, just to avoid full black)
     fillLight.current.position.set(
       Math.cos(back) * 3,
       -1.5,
       Math.sin(back) * 3
     )
 
-    // 🔥 subtle flicker for life
     keyLight.current.intensity = 1.8 + Math.sin(t * 16) * 0.05
   })
 
   return (
     <>
-      {/* 🌫️ VERY low ambient (keep contrast) */}
       <ambientLight intensity={0.12} />
 
-      {/* 🔥 KEY (white → defines form) */}
       <directionalLight
         ref={keyLight}
         intensity={1.85}
@@ -85,14 +116,12 @@ function CinematicLighting() {
 
       <object3D ref={target} position={[0, 0, 0]} />
 
-      {/* 🔥 RIM (cyan → scan synergy) */}
       <directionalLight
         ref={rimLight}
         intensity={2.2}
         color="#00ffff"
       />
 
-      {/* 💡 FILL (low + colored) */}
       <pointLight
         ref={fillLight}
         intensity={0.6}
@@ -102,38 +131,39 @@ function CinematicLighting() {
   )
 }
 
-function CenteredModel() {
-  const modelRef = useRef<THREE.Group>(null)
+function CenteredModel({ modelRef }: { modelRef: React.RefObject<THREE.Group | null> }) {
+  useLayoutEffect(() => {
+    if (!modelRef.current) return
 
-  useFrame((state) => {
-    if (modelRef.current) {
-      modelRef.current.rotation.y =
-        Math.sin(state.clock.elapsedTime * 0.1) * 0.05
-    }
-  })
+    const box = new THREE.Box3().setFromObject(modelRef.current)
+    const center = box.getCenter(new THREE.Vector3())
+
+    modelRef.current.position.sub(center)
+  }, [modelRef])
 
   return (
-    <group ref={modelRef} position={[0, -1, 0]} scale={2}>
+    <group ref={modelRef} scale={2}>
       <Model />
     </group>
   )
 }
 
-export default function CanvasRoot() {
+export default function Canvas() {
   const ternaryRef = useRef<TernaryEffect>(null)
+  const modelRef = useRef<THREE.Group>(null)
 
   return (
     <>
-      {/* Scene */}
       <color attach="background" args={['#050810']} />
       <fog attach="fog" args={['#050810', 5, 15]} />
 
+      <ScrollController modelRef={modelRef} />
       <TransitionController effectRef={ternaryRef} />
+
       <CinematicLighting />
-      <CenteredModel />
+      <CenteredModel modelRef={modelRef} />
       <RotatingCamera />
 
-      {/* 🔥 Pipeline */}
       <EffectComposer multisampling={0}>
         <SignalProcessor />
         <TernaryPass ref={ternaryRef} threshold={0.25} debug={0} />

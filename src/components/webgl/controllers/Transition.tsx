@@ -1,64 +1,66 @@
 'use client'
 
-import { useEffect } from 'react'
-import * as THREE from 'three'
+import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
+import { Effect } from 'postprocessing'
+import * as THREE from 'three'
 import { useTransitionStore } from '@/store/useTransitionStore'
 import { timelineRegistry } from '@/lib/global-timeline'
 import { gsap } from 'gsap'
 
 interface TransitionControllerProps {
-  effectRef?: React.RefObject<any>
+  effectRef?: React.RefObject<Effect | null>
 }
 
-export default function TransitionController({ effectRef }: TransitionControllerProps) {
+export function TransitionController({ effectRef }: TransitionControllerProps) {
   const { phase, targetRoute } = useTransitionStore()
   const { scene } = useThree()
+  const materialsRef = useRef<Set<THREE.MeshPhysicalMaterial> | null>(null)
 
   useEffect(() => {
-    const materials = new Set<THREE.MeshPhysicalMaterial>()
+    if (!materialsRef.current) {
+      const materials = new Set<THREE.MeshPhysicalMaterial>()
 
-    scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const addMaterial = (m: THREE.Material) => {
-          if (m instanceof THREE.MeshPhysicalMaterial) {
-            materials.add(m)
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          const addMaterial = (m: THREE.Material) => {
+            if (m instanceof THREE.MeshPhysicalMaterial) {
+              materials.add(m)
 
-            // 🔥 detect glass once
-            if (m.userData.isGlass === undefined) {
-              m.userData.isGlass = m.transmission > 0
+              if (m.userData.isGlass === undefined) {
+                m.userData.isGlass = m.transmission > 0
+              }
             }
           }
+
+          if (Array.isArray(child.material)) {
+            child.material.forEach(addMaterial)
+          } else {
+            addMaterial(child.material)
+          }
         }
+      })
 
-        if (Array.isArray(child.material)) {
-          child.material.forEach(addMaterial)
-        } else {
-          addMaterial(child.material)
+      materials.forEach((mat) => {
+        if (mat.userData.originalTransparent === undefined) {
+          mat.userData.originalTransparent = mat.transparent
         }
-      }
-    })
+        if (mat.userData.originalTransmission === undefined) {
+          mat.userData.originalTransmission = mat.transmission
+        }
+        if (mat.userData.originalRoughness === undefined) {
+          mat.userData.originalRoughness = mat.roughness
+        }
+      })
 
-    // Save original state
-    materials.forEach((mat) => {
-      if (mat.userData.originalTransparent === undefined) {
-        mat.userData.originalTransparent = mat.transparent
-      }
-      if (mat.userData.originalTransmission === undefined) {
-        mat.userData.originalTransmission = mat.transmission
-      }
-      if (mat.userData.originalRoughness === undefined) {
-        mat.userData.originalRoughness = mat.roughness
-      }
-    })
+      materialsRef.current = materials
+    }
 
-    /* =====================================================
-       🚪 EXIT
-    ===================================================== */
+    const materials = materialsRef.current
+
     if (phase === 'exiting' && targetRoute) {
       const tl = timelineRegistry.getExitTimeline()
       if (tl) {
-        // shader effect (immediate)
         if (effectRef?.current) {
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) {
@@ -75,19 +77,17 @@ export default function TransitionController({ effectRef }: TransitionController
           const isGlass = mat.userData.isGlass === true
 
           if (isGlass) {
-            // 🪐 GLASS EXIT (slightly staggered)
             tl.to(mat, {
               transmission: 0.0,
               roughness: 0.6,
-              duration: 0.6, // faster fade
+              duration: 0.6,
               ease: 'power2.in',
             }, 0.1)
           } else {
-            // 🧱 SOLID EXIT (slightly staggered)
             tl.to(mat, {
               emissiveIntensity: 6.0,
               opacity: 0,
-              duration: 0.6, // faster fade
+              duration: 0.6,
               ease: 'power2.in',
               onStart: () => {
                 mat.transparent = true
@@ -98,19 +98,15 @@ export default function TransitionController({ effectRef }: TransitionController
       }
     }
 
-    /* =====================================================
-       🚀 ENTER
-    ===================================================== */
     if (phase === 'entering') {
       const tl = timelineRegistry.getEnterTimeline()
       if (tl) {
-        // shader effect (immediate)
         if (effectRef?.current) {
           const uniform = effectRef.current.uniforms.get('uThreshold')
           if (uniform) {
             tl.to(uniform, {
               value: 0.15,
-              duration: 1.4, // give it time to reveal the model
+              duration: 1.4,
               ease: 'power3.out',
             }, 0)
           }
@@ -121,7 +117,6 @@ export default function TransitionController({ effectRef }: TransitionController
           const isGlass = mat.userData.isGlass === true
 
           if (isGlass) {
-            // 🪐 GLASS ENTER (Sequential delay: 0.4s)
             mat.transmission = 0
             mat.roughness = 0.6
 
@@ -132,7 +127,6 @@ export default function TransitionController({ effectRef }: TransitionController
               ease: 'power3.out',
             }, 0.4)
           } else {
-            // 🧱 SOLID ENTER (Sequential delay: 0.4s)
             mat.transparent = true
             mat.opacity = 0
             mat.emissiveIntensity = 1.0

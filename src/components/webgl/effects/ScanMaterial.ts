@@ -1,13 +1,5 @@
 import * as THREE from 'three'
 
-export type CustomShader = {
-  fragmentShader: any
-  vertexShader: any
-  uniforms: Record<string, any>
-}
-
-// 🔥 PERFORMANCE FIX: Share single uniform references across all materials.
-// This prevents memory bloat and allows us to update the scan effect ONCE per frame!
 export const sharedScanUniforms = {
   uTime: { value: 0 },
   uScanPosition: { value: 0 },
@@ -18,17 +10,19 @@ export const sharedScanUniforms = {
 export function applyScanMaterial(
   material: THREE.Material
 ) {
-  material.onBeforeCompile = (shader: CustomShader) => {
-    // Reference the globally shared uniforms instead of allocating new ones
-    shader.uniforms.uTime = sharedScanUniforms.uTime
-    shader.uniforms.uScanPosition = sharedScanUniforms.uScanPosition
-    shader.uniforms.uScanColor = sharedScanUniforms.uScanColor
-    shader.uniforms.uScanWidth = sharedScanUniforms.uScanWidth
+  material.onBeforeCompile = (shader) => {
+    const s = shader as { 
+      vertexShader: string
+      fragmentShader: string
+      uniforms: Record<string, unknown>
+    }
+    
+    s.uniforms.uTime = sharedScanUniforms.uTime
+    s.uniforms.uScanPosition = sharedScanUniforms.uScanPosition
+    s.uniforms.uScanColor = sharedScanUniforms.uScanColor
+    s.uniforms.uScanWidth = sharedScanUniforms.uScanWidth
 
-    // ----------------------------
-    // ✅ VERTEX
-    // ----------------------------
-    shader.vertexShader = shader.vertexShader.replace(
+    s.vertexShader = s.vertexShader.replace(
       '#include <common>',
       `
       #include <common>
@@ -36,7 +30,7 @@ export function applyScanMaterial(
       `
     )
 
-    shader.vertexShader = shader.vertexShader.replace(
+    s.vertexShader = s.vertexShader.replace(
       '#include <project_vertex>',
       `
       #include <project_vertex>
@@ -44,10 +38,7 @@ export function applyScanMaterial(
       `
     )
 
-    // ----------------------------
-    // ✅ FRAGMENT
-    // ----------------------------
-    shader.fragmentShader = shader.fragmentShader.replace(
+    s.fragmentShader = s.fragmentShader.replace(
       '#include <common>',
       `
       #include <common>
@@ -60,8 +51,7 @@ export function applyScanMaterial(
       `
     )
 
-    // 🔥 CRITICAL: inject BEFORE final output
-    shader.fragmentShader = shader.fragmentShader.replace(
+    s.fragmentShader = s.fragmentShader.replace(
       '#include <output_fragment>',
       `
       float dist = abs(vWorldPos.y - uScanPosition);
