@@ -9,7 +9,7 @@ export default function CanvasWrapper() {
   return (
     <Canvas
       className="w-full h-full"
-      camera={{ position: [0, 0, 0], fov: 35, near: 0.1, far: 100 }}
+      camera={{ position: [0, 0, 0], fov: 30, near: 0.1, far: 100 }}
       dpr={[1, 1.5]}
       gl={{
         antialias: true,

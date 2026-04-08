@@ -1,64 +1,46 @@
 'use client'
 
-import { useRef, useLayoutEffect } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef, useLayoutEffect, useMemo } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
 import { Model } from './assets/Model'
 import { SignalProcessor } from './effects/SignalProcessor'
 import { TernaryPass, TernaryEffect } from './effects/TernaryPass'
-import {
-  ScrollController,
-  START_CAMERA_POSITION,
-  START_LOOK_AT,
-} from './controllers/Scroll'
+import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
 import { useTransitionStore } from '@/store/useTransitionStore'
+import { useOrchestratorStore } from '@/store/useOrchestratorStore'
+import { 
+  getMappedCameraPosition, 
+  getMappedLookAt, 
+  getTransitionUniforms,
+} from '@/lib/animation-mapper'
 
-function RotatingCamera() {
+function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<TernaryEffect | null> }) {
+  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
+  const transitionProgress = useOrchestratorStore((state) => state.transitionProgress)
   const phase = useTransitionStore((state) => state.phase)
+  const { camera } = useThree()
 
-  useFrame((state, delta) => {
-    const isScrolling =
-      typeof window !== 'undefined' && window.scrollY > 5
+  const tempVec = useMemo(() => new THREE.Vector3(), [])
+  const tempLookAt = useMemo(() => new THREE.Vector3(), [])
 
-    const scrollBlend =
-      typeof window === 'undefined'
-        ? 0
-        : THREE.MathUtils.clamp(window.scrollY / 96, 0, 1)
+  useFrame((state) => {
+    // 1. Deterministic Camera Mapping
+    getMappedCameraPosition(scrollProgress, tempVec)
+    getMappedLookAt(scrollProgress, tempLookAt)
 
-    const angle = state.clock.elapsedTime * 0.2
-    const radius = 4
-    const orbitX = Math.sin(angle) * radius
-    const orbitZ = Math.cos(angle) * radius
-    const blendTargetX = THREE.MathUtils.lerp(orbitX, START_CAMERA_POSITION.x, scrollBlend)
-    const blendTargetY = THREE.MathUtils.lerp(0, START_CAMERA_POSITION.y, scrollBlend)
-    const blendTargetZ = THREE.MathUtils.lerp(orbitZ, START_CAMERA_POSITION.z, scrollBlend)
+    // 2. Apply to Scene
+    camera.position.copy(tempVec)
+    camera.lookAt(tempLookAt)
 
-    if (phase === 'idle') {
-      const damping = isScrolling ? 14 : 6
-
-      state.camera.position.x = THREE.MathUtils.damp(
-        state.camera.position.x,
-        blendTargetX,
-        damping,
-        delta
-      )
-      state.camera.position.y = THREE.MathUtils.damp(
-        state.camera.position.y,
-        blendTargetY,
-        damping,
-        delta
-      )
-      state.camera.position.z = THREE.MathUtils.damp(
-        state.camera.position.z,
-        blendTargetZ,
-        damping,
-        delta
-      )
-
-      state.camera.lookAt(START_LOOK_AT)
+    // 4. Update Post-processing Effects
+    if (ternaryRef.current) {
+      const threshold = getTransitionUniforms(transitionProgress, phase)
+      const uThreshold = ternaryRef.current.uniforms.get('uThreshold')
+      if (uThreshold) uThreshold.value = threshold
     }
   })
 
@@ -75,7 +57,6 @@ function CinematicLighting() {
     if (!keyLight.current || !rimLight.current || !fillLight.current || !target.current) return
 
     const t = state.clock.elapsedTime
-
     const cx = state.camera.position.x
     const cz = state.camera.position.z
     const angle = Math.atan2(cz, cx)
@@ -106,27 +87,10 @@ function CinematicLighting() {
   return (
     <>
       <ambientLight intensity={0.12} />
-
-      <directionalLight
-        ref={keyLight}
-        intensity={1.85}
-        color="#ffffff"
-        castShadow
-      />
-
+      <directionalLight ref={keyLight} intensity={1.85} color="#ffffff" castShadow />
       <object3D ref={target} position={[0, 0, 0]} />
-
-      <directionalLight
-        ref={rimLight}
-        intensity={2.2}
-        color="#00ffff"
-      />
-
-      <pointLight
-        ref={fillLight}
-        intensity={0.6}
-        color="#ff2a5f"
-      />
+      <directionalLight ref={rimLight} intensity={2.2} color="#00ffff" />
+      <pointLight ref={fillLight} intensity={0.6} color="#ff2a5f" />
     </>
   )
 }
@@ -134,10 +98,8 @@ function CinematicLighting() {
 function CenteredModel({ modelRef }: { modelRef: React.RefObject<THREE.Group | null> }) {
   useLayoutEffect(() => {
     if (!modelRef.current) return
-
     const box = new THREE.Box3().setFromObject(modelRef.current)
     const center = box.getCenter(new THREE.Vector3())
-
     modelRef.current.position.sub(center)
   }, [modelRef])
 
@@ -157,12 +119,12 @@ export default function Canvas() {
       <color attach="background" args={['#050810']} />
       <fog attach="fog" args={['#050810', 5, 15]} />
 
-      <ScrollController modelRef={modelRef} />
-      <TransitionController effectRef={ternaryRef} />
-
+      <ScrollController />
+      <TransitionController />
+      
+      <SceneOrchestrator ternaryRef={ternaryRef} />
       <CinematicLighting />
       <CenteredModel modelRef={modelRef} />
-      <RotatingCamera />
 
       <EffectComposer multisampling={0}>
         <SignalProcessor />

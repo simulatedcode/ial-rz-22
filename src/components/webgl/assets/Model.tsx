@@ -6,11 +6,19 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
+import { useOrchestratorStore } from '@/store/useOrchestratorStore'
+import { 
+  getMappedModelRotation, 
+  getMappedModelY, 
+  getMappedScanPosition 
+} from '@/lib/animation-mapper'
 
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
   const groupRef = useRef<THREE.Group>(null)
   const modelScene = useMemo(() => scene.clone(true), [scene])
+  
+  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
 
   useLayoutEffect(() => {
     if (!groupRef.current) return
@@ -50,27 +58,21 @@ export function Model() {
       if (isGlass) {
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
-
           transparent: true,
           opacity: 1,
-
           roughness: oldMat.roughness ?? 0.02,
           metalness: 0,
-
           transmission: 1,
           thickness: 0.25,
           ior: 1.45,
-
           clearcoat: 0.8,
           clearcoatRoughness: 0.15,
-
           envMapIntensity: 1.5,
           depthWrite: false,
         })
 
         newMat.attenuationColor = new THREE.Color('#F88863')
         newMat.attenuationDistance = 0.5
-
         newMat.userData.isGlass = true
         child.renderOrder = 10
       } else {
@@ -79,18 +81,13 @@ export function Model() {
           normalMap: oldMat.normalMap || null,
           roughnessMap: oldMat.roughnessMap || null,
           metalnessMap: oldMat.metalnessMap || null,
-
           color: '#ffffff',
-
           roughness: 0.2,
           metalness: 0.0,
-
           clearcoat: 0.5,
           clearcoatRoughness: 0.15,
-
           transmission: 0.0,
           transparent: false,
-
           envMapIntensity: 1.2,
         })
 
@@ -98,7 +95,6 @@ export function Model() {
       }
 
       newMat.needsUpdate = true
-
       child.material = newMat
       materialCache.set(oldMat.uuid, newMat)
     })
@@ -107,12 +103,13 @@ export function Model() {
   }, [modelScene])
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime
-    const range = 2.0
+    sharedScanUniforms.uTime.value = state.clock.elapsedTime
 
-    sharedScanUniforms.uTime.value = t
-    sharedScanUniforms.uScanPosition.value =
-      Math.sin(t * 0.2) * range
+    if (groupRef.current) {
+      groupRef.current.rotation.y = getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
+      groupRef.current.position.y = getMappedModelY(scrollProgress)
+      sharedScanUniforms.uScanPosition.value = getMappedScanPosition(scrollProgress)
+    }
   })
 
   return (
