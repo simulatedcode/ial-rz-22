@@ -8,9 +8,16 @@ interface HUDModalProps {
   onClose: () => void
   children: React.ReactNode
   title?: string
+  modalClassName?: string
 }
 
-export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MODAL' }: HUDModalProps) {
+export default function HUDModal({
+  isOpen,
+  onClose,
+  children,
+  title = 'SYSTEM_MODAL',
+  modalClassName = '',
+}: HUDModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -82,12 +89,12 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-200 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 invisible opacity-0"
+      className="fixed inset-0 z-200 flex items-center justify-center bg-background/10 backdrop-blur-sm px-6 invisible opacity-0"
       onClick={onClose}
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-xl bg-panel border border-primary/40 shadow-[0_0_40px_rgba(233,68,11,0.1)] rounded-sm overflow-hidden pointer-events-auto"
+        className={`relative w-full aspect-4/3 max-w-5xl bg-ocean-950 border border-primary/40 shadow-[0_0_40px_rgba(233,68,11,0.1)] rounded-sm overflow-hidden pointer-events-auto ${modalClassName}`.trim()}
         onClick={(e) => e.stopPropagation()}
         style={{ transformOrigin: 'center' }}
       >
