@@ -7,17 +7,17 @@ import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
-import { 
-  getMappedModelRotation, 
-  getMappedModelY, 
-  getMappedScanPosition 
+import {
+  getMappedModelRotation,
+  getMappedModelY,
+  getMappedScanPosition
 } from '@/lib/animation-mapper'
 
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
   const groupRef = useRef<THREE.Group>(null)
   const modelScene = useMemo(() => scene.clone(true), [scene])
-  
+
   const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
 
   useLayoutEffect(() => {
@@ -59,7 +59,7 @@ export function Model() {
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
           transparent: true,
-          opacity: 1,
+          opacity: 0.96,
           roughness: oldMat.roughness ?? 0.02,
           metalness: 0,
           transmission: 1,
@@ -72,7 +72,7 @@ export function Model() {
         })
 
         newMat.attenuationColor = new THREE.Color('#F88863')
-        newMat.attenuationDistance = 0.5
+        newMat.attenuationDistance = 2.5
         newMat.userData.isGlass = true
         child.renderOrder = 10
       } else {
@@ -82,10 +82,10 @@ export function Model() {
           roughnessMap: oldMat.roughnessMap || null,
           metalnessMap: oldMat.metalnessMap || null,
           color: '#ffffff',
-          roughness: 0.2,
+          roughness: 0.8,
           metalness: 0.0,
           clearcoat: 0.5,
-          clearcoatRoughness: 0.15,
+          clearcoatRoughness: 0.25,
           transmission: 0.0,
           transparent: false,
           envMapIntensity: 1.2,
