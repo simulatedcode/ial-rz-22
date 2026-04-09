@@ -8,6 +8,7 @@ import * as THREE from 'three'
 import { Model } from './assets/Model'
 import { SignalProcessor } from './effects/SignalProcessor'
 import { TernaryPass, TernaryEffect } from './effects/TernaryPass'
+import { CinematicStack } from './effects/CinematicStack'
 import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
 import { useTransitionStore } from '@/store/useTransitionStore'
@@ -129,6 +130,7 @@ export default function Canvas() {
       <EffectComposer multisampling={0}>
         <SignalProcessor />
         <TernaryPass ref={ternaryRef} threshold={0.25} debug={0} />
+        <CinematicStack />
       </EffectComposer>
     </>
   )

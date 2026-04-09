@@ -27,7 +27,7 @@ export function Model() {
 
   useLayoutEffect(() => {
     r3fScene.environment = envMap
-    r3fScene.environmentIntensity = 0.08
+    r3fScene.environmentIntensity = 0.35
 
     return () => {
       r3fScene.environment = null
@@ -97,9 +97,9 @@ export function Model() {
 
   return (
     <>
-      <ambientLight intensity={0.035} />
-      <directionalLight position={[3, 3, 3]} intensity={0.02} />
-      <directionalLight position={[-3, -2, -3]} intensity={0.06} />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[3, 3, 3]} intensity={0.2} />
+      <directionalLight position={[-3, -2, -3]} intensity={0.6} />
 
       <group ref={groupRef}>
         <primitive object={scene} />

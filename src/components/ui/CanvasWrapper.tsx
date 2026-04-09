@@ -16,6 +16,7 @@ export default function CanvasWrapper() {
         powerPreference: 'high-performance',
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.2,
+        outputColorSpace: THREE.SRGBColorSpace,
       }}
     >
       <Suspense fallback={null}>
