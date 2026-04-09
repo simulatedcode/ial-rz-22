@@ -3,13 +3,13 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
 import * as THREE from 'three'
-import CanvasRoot from '@/components/webgl/CanvasRoot'
+import { Canvas as WebGLCanvas } from '@/components/webgl'
 
 export default function CanvasWrapper() {
   return (
     <Canvas
       className="w-full h-full"
-      camera={{ position: [0, 0.5, 4], fov: 35, near: 0.1, far: 100 }}
+      camera={{ position: [0, 0, 0], fov: 30, near: 0.1, far: 100 }}
       dpr={[1, 1.5]}
       gl={{
         antialias: true,
@@ -19,7 +19,7 @@ export default function CanvasWrapper() {
       }}
     >
       <Suspense fallback={null}>
-        <CanvasRoot />
+        <WebGLCanvas />
       </Suspense>
     </Canvas>
   )

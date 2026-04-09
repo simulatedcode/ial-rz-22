@@ -82,7 +82,7 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 invisible opacity-0"
+      className="fixed inset-0 z-200 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 invisible opacity-0"
       onClick={onClose}
     >
       <div
@@ -98,7 +98,7 @@ export default function HUDModal({ isOpen, onClose, children, title = 'SYSTEM_MO
         <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-accent/60 z-10" />
 
         {/* Scanline Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-size-[100%_4px,3px_100%]" />
 
         {/* Header Strip */}
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-primary/20 bg-primary/5 font-pixel text-[9px] tracking-widest text-accent uppercase z-10">

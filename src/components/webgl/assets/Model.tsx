@@ -1,26 +1,35 @@
 'use client'
 
 import { useGLTF } from '@react-three/drei'
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
+import { useOrchestratorStore } from '@/store/useOrchestratorStore'
+import { 
+  getMappedModelRotation, 
+  getMappedModelY, 
+  getMappedScanPosition 
+} from '@/lib/animation-mapper'
 
-export default function Model() {
+export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
-
   const groupRef = useRef<THREE.Group>(null)
+  const modelScene = useMemo(() => scene.clone(true), [scene])
+  
+  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!groupRef.current) return
+
+    groupRef.current.visible = false
 
     const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
 
     groupRef.current.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
-      // 🔥 PERFORMANCE: Only update matrices when requested
       child.matrixAutoUpdate = false
       child.updateMatrix()
 
@@ -30,13 +39,11 @@ export default function Model() {
       const oldMat = child.material as THREE.MeshStandardMaterial
       if (!oldMat) return
 
-      // 🔥 Fix GLTF textures
       if (oldMat.map) {
         oldMat.map.flipY = false
         oldMat.map.colorSpace = THREE.SRGBColorSpace
       }
 
-      // 🔁 reuse material
       if (materialCache.has(oldMat.uuid)) {
         child.material = materialCache.get(oldMat.uuid)!
         return
@@ -44,88 +51,70 @@ export default function Model() {
 
       let newMat: THREE.MeshPhysicalMaterial
 
-      /* =================================================
-         🔍 CORRECT GLASS DETECTION (IMPORTANT)
-      ================================================= */
-
       const isGlass =
         'transmission' in oldMat &&
-        (oldMat as any).transmission > 0
+        (oldMat as THREE.MeshPhysicalMaterial).transmission > 0
 
       if (isGlass) {
-        // 🪐 REAL VISOR MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
-
           transparent: true,
           opacity: 1,
-
           roughness: oldMat.roughness ?? 0.02,
           metalness: 0,
-
           transmission: 1,
-          thickness: 0.25, // 🔥 depth
+          thickness: 0.25,
           ior: 1.45,
-
           clearcoat: 0.8,
           clearcoatRoughness: 0.15,
-
           envMapIntensity: 1.5,
           depthWrite: false,
         })
 
-        // optional tint (remove if not needed)
         newMat.attenuationColor = new THREE.Color('#F88863')
         newMat.attenuationDistance = 0.5
-
         newMat.userData.isGlass = true
-        // render priority fix
         child.renderOrder = 10
       } else {
-        // 🧱 SOLID MATERIAL
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
           normalMap: oldMat.normalMap || null,
           roughnessMap: oldMat.roughnessMap || null,
           metalnessMap: oldMat.metalnessMap || null,
-
           color: '#ffffff',
-
           roughness: 0.2,
           metalness: 0.0,
-
           clearcoat: 0.5,
           clearcoatRoughness: 0.15,
-
           transmission: 0.0,
           transparent: false,
-
           envMapIntensity: 1.2,
         })
 
-        // 🔥 keep your scan system
         applyScanMaterial(newMat)
       }
 
       newMat.needsUpdate = true
-
       child.material = newMat
       materialCache.set(oldMat.uuid, newMat)
     })
-  }, [scene])
+
+    groupRef.current.visible = true
+  }, [modelScene])
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime
-    const range = 2.0
+    sharedScanUniforms.uTime.value = state.clock.elapsedTime
 
-    sharedScanUniforms.uTime.value = t
-    sharedScanUniforms.uScanPosition.value =
-      Math.sin(t * 0.2) * range
+    if (groupRef.current) {
+      groupRef.current.rotation.y = getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
+      groupRef.current.position.y = getMappedModelY(scrollProgress)
+      sharedScanUniforms.uScanPosition.value = getMappedScanPosition(scrollProgress)
+    }
   })
 
   return (
     <group ref={groupRef} scale={1}>
-      <primitive object={scene} />
+      <primitive object={modelScene} />
     </group>
   )
 }

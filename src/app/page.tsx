@@ -1,9 +1,11 @@
 import Hero from "@/components/section/HeroSection";
+import Info from "@/components/section/InfoSection";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 py-38 items-center justify-center font-sans text-foreground">
+    <main className="w-full font-sans text-foreground">
       <Hero />
-    </div>
+      <Info />
+    </main>
   );
 }
