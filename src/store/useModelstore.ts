@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import * as THREE from 'three'
 import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader.js'
 
 type PCDData = {

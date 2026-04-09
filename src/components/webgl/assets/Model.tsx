@@ -5,7 +5,11 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
-import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
+import {
+  applyGlassScanMaterial,
+  applyScanMaterial,
+  sharedScanUniforms,
+} from '../effects/ScanMaterial'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedModelRotation,
@@ -59,7 +63,7 @@ export function Model() {
         newMat = new THREE.MeshPhysicalMaterial({
           map: oldMat.map || null,
           transparent: true,
-          opacity: 0.96,
+          opacity: 0.86,
           roughness: oldMat.roughness ?? 0.02,
           metalness: 0,
           transmission: 1,
@@ -74,6 +78,7 @@ export function Model() {
         newMat.attenuationColor = new THREE.Color('#F88863')
         newMat.attenuationDistance = 2.5
         newMat.userData.isGlass = true
+        applyGlassScanMaterial(newMat)
         child.renderOrder = 10
       } else {
         newMat = new THREE.MeshPhysicalMaterial({

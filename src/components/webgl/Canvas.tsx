@@ -27,7 +27,7 @@ function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<Ternary
   const tempVec = useMemo(() => new THREE.Vector3(), [])
   const tempLookAt = useMemo(() => new THREE.Vector3(), [])
 
-  useFrame((state) => {
+  useFrame(() => {
     // 1. Deterministic Camera Mapping
     getMappedCameraPosition(scrollProgress, tempVec)
     getMappedLookAt(scrollProgress, tempLookAt)
