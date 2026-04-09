@@ -12,9 +12,9 @@ import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
 import { useTransitionStore } from '@/store/useTransitionStore'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
-import { 
-  getMappedCameraPosition, 
-  getMappedLookAt, 
+import {
+  getMappedCameraPosition,
+  getMappedLookAt,
   getTransitionUniforms,
 } from '@/lib/animation-mapper'
 
@@ -121,7 +121,7 @@ export default function Canvas() {
 
       <ScrollController />
       <TransitionController />
-      
+
       <SceneOrchestrator ternaryRef={ternaryRef} />
       <CinematicLighting />
       <CenteredModel modelRef={modelRef} />

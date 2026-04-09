@@ -1,13 +1,13 @@
 'use client'
 
-import { useGLTF } from '@react-three/drei'
-import { useLayoutEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useGLTF, useTexture } from '@react-three/drei'
+import { useLayoutEffect, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import {
-  applyGlassScanMaterial,
   applyScanMaterial,
+  applyGlassScanMaterial,
   sharedScanUniforms,
 } from '../effects/ScanMaterial'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
@@ -19,108 +19,92 @@ import {
 
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
-  const groupRef = useRef<THREE.Group>(null)
-  const modelScene = useMemo(() => scene.clone(true), [scene])
+  const { scene: r3fScene } = useThree()
 
+  const envMap = useTexture('/images/panorama.png')
+  envMap.mapping = THREE.EquirectangularReflectionMapping
+  envMap.colorSpace = THREE.SRGBColorSpace
+
+  useLayoutEffect(() => {
+    r3fScene.environment = envMap
+    r3fScene.environmentIntensity = 0.08
+
+    return () => {
+      r3fScene.environment = null
+    }
+  }, [envMap, r3fScene])
+
+  const groupRef = useRef<THREE.Group>(null)
   const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
 
   useLayoutEffect(() => {
-    if (!groupRef.current) return
+    if (!scene) return
 
-    groupRef.current.visible = false
-
-    const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
-
-    groupRef.current.traverse((child) => {
+    scene.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
-      child.matrixAutoUpdate = false
-      child.updateMatrix()
-
+      // 🔥 Optimization: Basic mesh setup
       child.castShadow = true
       child.receiveShadow = true
 
-      const oldMat = child.material as THREE.MeshStandardMaterial
-      if (!oldMat) return
+      const mat = child.material as THREE.MeshPhysicalMaterial
+      if (!mat) return
 
-      if (oldMat.map) {
-        oldMat.map.flipY = false
-        oldMat.map.colorSpace = THREE.SRGBColorSpace
-      }
-
-      if (materialCache.has(oldMat.uuid)) {
-        child.material = materialCache.get(oldMat.uuid)!
-        return
-      }
-
-      let newMat: THREE.MeshPhysicalMaterial
-
-      const isGlass =
-        'transmission' in oldMat &&
-        (oldMat as THREE.MeshPhysicalMaterial).transmission > 0
-
-      if (isGlass) {
-        newMat = new THREE.MeshPhysicalMaterial({
-          map: oldMat.map || null,
-          transparent: true,
-          opacity: 0.86,
-          roughness: oldMat.roughness ?? 0.02,
-          metalness: 0,
-          transmission: 1,
-          thickness: 0.25,
-          ior: 1.45,
-          clearcoat: 0.8,
-          clearcoatRoughness: 0.15,
-          envMapIntensity: 1.5,
-          depthWrite: false,
+      // 🔥 Optimization: Only process each material instance once
+      if (!mat.userData.isProcessed) {
+        // Correct texture settings for GLTF standards if missing
+        const maps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap']
+        maps.forEach(mapName => {
+          const texture = (mat as any)[mapName]
+          if (texture && texture instanceof THREE.Texture) {
+            texture.flipY = false
+            texture.colorSpace = (mapName === 'map' || mapName === 'emissiveMap')
+              ? THREE.SRGBColorSpace
+              : THREE.NoColorSpace
+          }
         })
 
-        newMat.attenuationColor = new THREE.Color('#F88863')
-        newMat.attenuationDistance = 2.5
-        newMat.userData.isGlass = true
-        applyGlassScanMaterial(newMat)
-        child.renderOrder = 10
-      } else {
-        newMat = new THREE.MeshPhysicalMaterial({
-          map: oldMat.map || null,
-          normalMap: oldMat.normalMap || null,
-          roughnessMap: oldMat.roughnessMap || null,
-          metalnessMap: oldMat.metalnessMap || null,
-          color: '#ffffff',
-          roughness: 0.8,
-          metalness: 0.0,
-          clearcoat: 0.5,
-          clearcoatRoughness: 0.25,
-          transmission: 0.0,
-          transparent: false,
-          envMapIntensity: 1.2,
-        })
+        // 🔥 loading original texture & material properties
+        // We detect "glass" or "chrome" parts to apply specific scan logic
+        const isGlass = mat.transmission > 0 || mat.transparent || mat.opacity < 1
 
-        applyScanMaterial(newMat)
+        if (isGlass) {
+          applyGlassScanMaterial(mat)
+          child.renderOrder = 10
+        } else {
+          applyScanMaterial(mat)
+        }
+
+        mat.userData.isProcessed = true
       }
-
-      newMat.needsUpdate = true
-      child.material = newMat
-      materialCache.set(oldMat.uuid, newMat)
     })
-
-    groupRef.current.visible = true
-  }, [modelScene])
+  }, [scene])
 
   useFrame((state) => {
     sharedScanUniforms.uTime.value = state.clock.elapsedTime
 
     if (groupRef.current) {
-      groupRef.current.rotation.y = getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
-      groupRef.current.position.y = getMappedModelY(scrollProgress)
-      sharedScanUniforms.uScanPosition.value = getMappedScanPosition(scrollProgress)
+      groupRef.current.rotation.y =
+        getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
+
+      groupRef.current.position.y =
+        getMappedModelY(scrollProgress)
+
+      sharedScanUniforms.uScanPosition.value =
+        getMappedScanPosition(scrollProgress)
     }
   })
 
   return (
-    <group ref={groupRef} scale={1}>
-      <primitive object={modelScene} />
-    </group>
+    <>
+      <ambientLight intensity={0.035} />
+      <directionalLight position={[3, 3, 3]} intensity={0.02} />
+      <directionalLight position={[-3, -2, -3]} intensity={0.06} />
+
+      <group ref={groupRef}>
+        <primitive object={scene} />
+      </group>
+    </>
   )
 }
 

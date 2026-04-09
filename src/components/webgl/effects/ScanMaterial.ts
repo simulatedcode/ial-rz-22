@@ -87,7 +87,12 @@ export function applyScanMaterial(material: THREE.Material) {
       vec3 tintedLight = mix(outgoingLight, outgoingLight * (0.9 + uScanColor * 0.35), scanMix);
       vec3 glowColor = uScanColor * accent * 0.08;
 
-      outgoingLight = tintedLight + glowColor;
+      // 🔥 HYBRID SPECULAR: Reflective sheen from the scan line
+      float hybridFresnel = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 2.2);
+      float reflectiveGlow = scanEnvelope * hybridFresnel * 2.8;
+      vec3 hybridGloss = uScanColor * reflectiveGlow * 1.2;
+
+      outgoingLight = tintedLight + glowColor + hybridGloss;
 
       #include <opaque_fragment>
       `

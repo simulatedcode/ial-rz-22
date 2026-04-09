@@ -8,7 +8,7 @@ export const CAMERA_CONFIG = {
   start: new THREE.Vector3(0, 0, 4.2),
   end: new THREE.Vector3(0.5, 0.2, 1.8),
   lookAtStart: new THREE.Vector3(0, 0, 0),
-  lookAtEnd: new THREE.Vector3(0.3, 0.2, 0),
+  lookAtEnd: new THREE.Vector3(0.33, 0.15, 0),
 }
 
 export const MODEL_CONFIG = {
