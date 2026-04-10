@@ -13,7 +13,7 @@ export const CAMERA_CONFIG = {
 
 export const MODEL_CONFIG = {
   rotationStart: 0,
-  rotationEnd: Math.PI * 0.15,
+  rotationEnd: Math.PI * 0.05,
   yStart: 0, // Adjust as needed
   yEnd: -0.2,
   scanStart: 2.0,

@@ -1,8 +1,8 @@
 'use client'
 
-import { useGLTF, useTexture } from '@react-three/drei'
-import { useLayoutEffect, useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { Environment, useGLTF, useTexture } from '@react-three/drei'
+import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
 import {
@@ -17,22 +17,31 @@ import {
   getMappedScanPosition
 } from '@/lib/animation-mapper'
 
+const MATERIAL_MAP_KEYS = [
+  'map',
+  'normalMap',
+  'roughnessMap',
+  'metalnessMap',
+  'emissiveMap',
+  'aoMap',
+] as const
+
+type MaterialMapKey = (typeof MATERIAL_MAP_KEYS)[number]
+
+type ScanReadyMaterial = THREE.MeshPhysicalMaterial & Partial<Record<MaterialMapKey, THREE.Texture | null>>
+
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
-  const { scene: r3fScene } = useThree()
+  const envMapTexture = useTexture('/images/panorama.png')
+  const envMap = useMemo(() => {
+    const texture = envMapTexture.clone()
 
-  const envMap = useTexture('/images/panorama.png')
-  envMap.mapping = THREE.EquirectangularReflectionMapping
-  envMap.colorSpace = THREE.SRGBColorSpace
+    texture.mapping = THREE.EquirectangularReflectionMapping
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.needsUpdate = true
 
-  useLayoutEffect(() => {
-    r3fScene.environment = envMap
-    r3fScene.environmentIntensity = 0.35
-
-    return () => {
-      r3fScene.environment = null
-    }
-  }, [envMap, r3fScene])
+    return texture
+  }, [envMapTexture])
 
   const groupRef = useRef<THREE.Group>(null)
   const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
@@ -47,15 +56,14 @@ export function Model() {
       child.castShadow = true
       child.receiveShadow = true
 
-      const mat = child.material as THREE.MeshPhysicalMaterial
+      const mat = child.material as ScanReadyMaterial
       if (!mat) return
 
       // 🔥 Optimization: Only process each material instance once
       if (!mat.userData.isProcessed) {
         // Correct texture settings for GLTF standards if missing
-        const maps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap']
-        maps.forEach(mapName => {
-          const texture = (mat as any)[mapName]
+        MATERIAL_MAP_KEYS.forEach((mapName) => {
+          const texture = mat[mapName]
           if (texture && texture instanceof THREE.Texture) {
             texture.flipY = false
             texture.colorSpace = (mapName === 'map' || mapName === 'emissiveMap')
@@ -97,9 +105,11 @@ export function Model() {
 
   return (
     <>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[3, 3, 3]} intensity={0.2} />
-      <directionalLight position={[-3, -2, -3]} intensity={0.6} />
+      <Environment map={envMap} background={false} environmentIntensity={0.35} />
+
+      <ambientLight intensity={0.25} />
+      <directionalLight position={[3, 3, 3]} intensity={0.18} />
+      <directionalLight position={[-3, -2, -3]} intensity={0.46} />
 
       <group ref={groupRef}>
         <primitive object={scene} />

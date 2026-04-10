@@ -87,7 +87,7 @@ function CinematicLighting() {
 
   return (
     <>
-      <ambientLight intensity={0.12} />
+      <ambientLight intensity={0.22} />
       <directionalLight ref={keyLight} intensity={1.85} color="#ffffff" castShadow />
       <object3D ref={target} position={[0, 0, 0]} />
       <directionalLight ref={rimLight} intensity={2.2} color="#00ffff" />

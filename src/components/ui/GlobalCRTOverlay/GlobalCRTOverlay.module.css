@@ -35,27 +35,27 @@
 .scanlines {
   background:
     linear-gradient(
-      rgba(0, 0, 0, 0) 50%,
-      rgba(0, 0, 0, 0.3) 50%
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.25) 50%
     ),
     linear-gradient(
       90deg,
       rgba(255, 0, 0, 0.6) 0%,
-      rgba(0, 255, 0, 0.4) 50%,
-      rgba(0, 0, 255, 0.6) 100%
+      rgba(0, 255, 0, 0.25) 50%,
+      rgba(0, 0, 255, 0.4) 100%
     ),
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 0, 0, 0.3) 4px,
-      rgba(0, 0, 0, 0.3) 6px
+      rgba(0, 0, 0, 0.3) 8px,
+      rgba(0, 0, 0, 0.3) 12px
     );
 
-  background-size: 100% 3px, 4px 100%, 100% 100%;
-  opacity: 0.2;
+  background-size: 100% 4px, 6px 100%, 100% 100%;
+  opacity: 0.26;
 
-  backdrop-filter: contrast(2.02) brightness(1.02);
+  backdrop-filter: contrast(1.02) brightness(1.22);
 }
 
 /* -------------------------------------------------- */
@@ -115,7 +115,7 @@
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(255, 255, 255, 0.02) 20%,
+    rgba(255, 255, 255, 0.02) 40%,
     transparent 100%
   );
 
