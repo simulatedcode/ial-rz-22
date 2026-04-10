@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useRef } from 'react'
 import { LUTCubeLoader } from 'postprocessing'
-import { useLoader } from '@react-three/fiber'
+import { useLoader, useFrame } from '@react-three/fiber'
 import {
   LUT,
   Bloom,
@@ -22,14 +22,16 @@ export function CinematicStack({
   // 🎨 Load LUT
   const lut = useLoader(LUTCubeLoader, lutPath)
 
-  // 🎮 Global drivers
-  const scrollProgress = useOrchestratorStore((s) => s.scrollProgress)
+  const lutRef = useRef<any>(null)
 
-  // 🧠 Derived intensity with cinematic smoothing
-  const intensity = useMemo(() => {
-    const clamped = THREE.MathUtils.clamp(scrollProgress, 0, 1)
-    return THREE.MathUtils.smoothstep(clamped, 0, 1)
-  }, [scrollProgress])
+  useFrame(() => {
+    if (lutRef.current) {
+      const scrollProgress = useOrchestratorStore.getState().scrollProgress
+      const clamped = THREE.MathUtils.clamp(scrollProgress, 0, 1)
+      const intensity = THREE.MathUtils.smoothstep(clamped, 0, 1)
+      lutRef.current.blendMode.opacity.value = intensity
+    }
+  })
 
   return (
     <>
@@ -41,8 +43,7 @@ export function CinematicStack({
       />
 
       {/* 🎞️ 2. Color Grading: Master grade */}
-      {/* @ts-ignore - Library types omit opacity even though it's standard for Effects */}
-      <LUT lut={lut} opacity={intensity} />
+      <LUT ref={lutRef} lut={lut} />
 
       {/* 🕶️ 3. Vignette: Lens framing */}
       <Vignette offset={0.1} darkness={1.1} />

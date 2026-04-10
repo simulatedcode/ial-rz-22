@@ -98,7 +98,8 @@ export function applyScanMaterial(material: THREE.Material) {
       `
     )
   }
-
+  
+  material.customProgramCacheKey = () => 'scanMaterial';
   material.needsUpdate = true
 }
 
@@ -147,5 +148,6 @@ export function applyGlassScanMaterial(material: THREE.Material) {
     )
   }
 
+  material.customProgramCacheKey = () => 'glassScanMaterial';
   material.needsUpdate = true
 }
