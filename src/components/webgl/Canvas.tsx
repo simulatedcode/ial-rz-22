@@ -2,14 +2,15 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Stats } from '@react-three/drei'
 import * as THREE from 'three'
 import { EffectComposer } from '@react-three/postprocessing'
 
 import { Model } from './assets/Model'
 import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
+import { PerformanceManager } from './controllers/PerformanceManager'
 import { RetroTerminalEffect } from './effects/RetroTerminal'
+import { ShaderPlane } from './ShaderPlane'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedCameraPosition,
@@ -99,11 +100,13 @@ function CinematicLighting() {
 export default function Canvas() {
   return (
     <>
-      <color attach="background" args={['#050810']} />
-      <fog attach="fog" args={['#050810', 5, 50]} />
 
       <ScrollController />
       <TransitionController />
+      <PerformanceManager />
+
+      {/* 🧠 AI Shader System backdrop */}
+      <ShaderPlane />
 
       <SceneOrchestrator />
       <CinematicLighting />
@@ -112,8 +115,6 @@ export default function Canvas() {
       <EffectComposer enableNormalPass multisampling={0}>
         <RetroTerminalEffect />
       </EffectComposer >
-
-      <Stats className="top-auto! bottom-4! left-4!" />
     </>
   )
 }
