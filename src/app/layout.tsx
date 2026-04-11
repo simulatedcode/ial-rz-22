@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   description: "Speculative Future Memories",
 };
 
+import CRTOverlay from "@/components/ui/CRTOverlay";
+
 export default function RootLayout({
   children,
 }: {
@@ -51,6 +53,9 @@ export default function RootLayout({
           <Header />
           <SmoothScroll>{children}</SmoothScroll>
         </main>
+
+        {/* 📺 Screen Layer (Covers both WebGL and UI) */}
+        <CRTOverlay />
       </body>
     </html>
   );

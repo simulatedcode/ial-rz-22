@@ -4,10 +4,12 @@ import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Stats } from '@react-three/drei'
 import * as THREE from 'three'
+import { EffectComposer } from '@react-three/postprocessing'
 
 import { Model } from './assets/Model'
 import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
+import { RetroTerminalEffect } from './effects/RetroTerminal'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedCameraPosition,
@@ -107,7 +109,11 @@ export default function Canvas() {
       <CinematicLighting />
       <Model />
 
-      <Stats />
+      <EffectComposer enableNormalPass multisampling={0}>
+        <RetroTerminalEffect />
+      </EffectComposer >
+
+      <Stats className="top-auto! bottom-4! left-4!" />
     </>
   )
 }
