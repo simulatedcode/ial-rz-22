@@ -42,7 +42,7 @@ export default function RootLayout({
       lang="en"
       className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
     >
-      <body className="relative w-full min-h-screen bg-background overflow-hidden" suppressHydrationWarning>
+      <body className="relative w-full min-h-screen bg-background overflow-x-hidden" suppressHydrationWarning>
         {/* 🔥 WebGL Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <CanvasWrapper />
