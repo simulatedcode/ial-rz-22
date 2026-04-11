@@ -2,26 +2,19 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer } from '@react-three/postprocessing'
 import { Stats } from '@react-three/drei'
 import * as THREE from 'three'
 
 import { Model } from './assets/Model'
-import { SignalProcessor } from './effects/SignalProcessor'
-import { TernaryPass, TernaryEffect } from './effects/TernaryPass'
-import { CinematicStack } from './effects/CinematicStack'
 import { ScrollController } from './controllers/Scroll'
 import { TransitionController } from './controllers/Transition'
-import { useTransitionStore } from '@/store/useTransitionStore'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedCameraPosition,
   getMappedLookAt,
-  getTransitionUniforms,
 } from '@/lib/animation-mapper'
 
-function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<TernaryEffect | null> }) {
-  const phase = useTransitionStore((state) => state.phase)
+function SceneOrchestrator() {
   const { camera } = useThree()
 
   const tempVec = useMemo(() => new THREE.Vector3(), [])
@@ -29,7 +22,7 @@ function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<Ternary
 
   useFrame(() => {
     // 🔥 Optimization: Direct state access from store to avoid React re-renders
-    const { scrollProgress, transitionProgress } = useOrchestratorStore.getState()
+    const { scrollProgress } = useOrchestratorStore.getState()
 
     // 1. Deterministic Camera Mapping
     getMappedCameraPosition(scrollProgress, tempVec)
@@ -38,13 +31,6 @@ function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<Ternary
     // 2. Apply to Scene
     camera.position.copy(tempVec)
     camera.lookAt(tempLookAt)
-
-    // 4. Update Post-processing Effects
-    if (ternaryRef.current) {
-      const threshold = getTransitionUniforms(transitionProgress, phase)
-      const uThreshold = ternaryRef.current.uniforms.get('uThreshold')
-      if (uThreshold) uThreshold.value = threshold
-    }
   })
 
   return null
@@ -65,7 +51,7 @@ function CinematicLighting() {
     const cx = state.camera.position.x
     const cz = state.camera.position.z
     
-    // 🔥 Optimization: Only update if camera moved significantly or clock progressed
+    // Only update if camera moved significantly or clock progressed
     const moved = Math.abs(prevPos.current.x - cx) > EPSILON || Math.abs(prevPos.current.z - cz) > EPSILON
     const t = state.clock.elapsedTime
     
@@ -109,8 +95,6 @@ function CinematicLighting() {
 }
 
 export default function Canvas() {
-  const ternaryRef = useRef<TernaryEffect>(null)
-
   return (
     <>
       <color attach="background" args={['#050810']} />
@@ -119,16 +103,11 @@ export default function Canvas() {
       <ScrollController />
       <TransitionController />
 
-      <SceneOrchestrator ternaryRef={ternaryRef} />
+      <SceneOrchestrator />
       <CinematicLighting />
       <Model />
 
       <Stats />
-      <EffectComposer multisampling={0}>
-        <SignalProcessor />
-        <TernaryPass ref={ternaryRef} threshold={0.25} debug={0} />
-        <CinematicStack />
-      </EffectComposer>
     </>
   )
 }

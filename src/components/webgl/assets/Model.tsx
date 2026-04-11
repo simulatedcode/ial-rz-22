@@ -5,17 +5,11 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
-import {
-  applyScanMaterial,
-  applyGlassScanMaterial,
-  sharedScanUniforms,
-} from '../effects/ScanMaterial'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedModelRotation,
   getMappedModelY,
-  getMappedModelX,
-  getMappedScanPosition
+  getMappedModelX
 } from '@/lib/animation-mapper'
 
 export function Model() {
@@ -36,13 +30,21 @@ export function Model() {
   ========================= */
   const modelScene = useMemo(() => {
     const cloned = scene.clone()
+    const materialMap = new Map<THREE.Material, THREE.Material>()
 
     cloned.traverse((child: any) => {
       if (!child.isMesh) return
 
-      child.material = child.material.clone()
-
-      // disable heavy stuff
+      // Reuse materials instead of cloning per-mesh for performance
+      if (!materialMap.has(child.material)) {
+        const clonedMat = child.material.clone()
+        clonedMat.castShadow = false
+        clonedMat.receiveShadow = false
+        materialMap.set(child.material, clonedMat)
+      }
+      
+      child.material = materialMap.get(child.material)!
+      
       child.castShadow = false
       child.receiveShadow = false
     })
@@ -64,29 +66,16 @@ export function Model() {
   }, [])
 
   /* =========================
-     🎨 MATERIAL PIPELINE
+     🎨 MATERIAL PIPELINE (REMOVED SHADERS)
   ========================= */
   useLayoutEffect(() => {
     modelScene.traverse((child: any) => {
       if (!child.isMesh) return
-
       const mat = child.material
-      if (!mat || mat.userData.processed) return
+      if (!mat) return
 
-      // minimal fix only
+      // Ensure correct color space for textures
       if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace
-
-      const isGlass =
-        mat.transmission > 0 || mat.transparent || mat.opacity < 1
-
-      if (isGlass) {
-        applyGlassScanMaterial(mat)
-        child.renderOrder = 10
-      } else {
-        applyScanMaterial(mat)
-      }
-
-      mat.userData.processed = true
     })
   }, [modelScene])
 
@@ -95,8 +84,6 @@ export function Model() {
   ========================= */
   useFrame((state) => {
     const scroll = useOrchestratorStore.getState().scrollProgress
-
-    sharedScanUniforms.uTime.value = state.clock.elapsedTime
 
     if (groupRef.current) {
       groupRef.current.rotation.y =
@@ -107,9 +94,6 @@ export function Model() {
 
       groupRef.current.position.x =
         getMappedModelX(scroll)
-
-      sharedScanUniforms.uScanPosition.value =
-        getMappedScanPosition(scroll)
     }
   })
 

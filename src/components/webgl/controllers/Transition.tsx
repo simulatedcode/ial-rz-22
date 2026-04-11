@@ -7,9 +7,13 @@ import { timelineRegistry } from '@/lib/global-timeline'
 
 export function TransitionController() {
   const { phase, targetRoute } = useTransitionStore()
-  const setTransitionProgress = useOrchestratorStore((state) => state.setTransitionProgress)
 
   useEffect(() => {
+    // ⚡ getState() is always a stable reference — no React subscription needed.
+    // setTransitionProgress fires 60x/sec via GSAP onUpdate; keeping it out of
+    // React's useState/useSelector chain prevents reconciler overhead during transitions.
+    const { setTransitionProgress } = useOrchestratorStore.getState()
+
     if (phase === 'exiting' && targetRoute) {
       const tl = timelineRegistry.getExitTimeline()
       if (tl) {
@@ -19,7 +23,7 @@ export function TransitionController() {
           duration: 0.8,
           ease: 'power2.inOut',
           onUpdate: function() {
-            setTransitionProgress(this.targets()[0].p)
+            useOrchestratorStore.getState().setTransitionProgress(this.targets()[0].p)
           }
         }, 0)
       }
@@ -34,12 +38,12 @@ export function TransitionController() {
           duration: 1.4,
           ease: 'power3.out',
           onUpdate: function() {
-            setTransitionProgress(this.targets()[0].p)
+            useOrchestratorStore.getState().setTransitionProgress(this.targets()[0].p)
           }
         }, 0)
       }
     }
-  }, [phase, targetRoute, setTransitionProgress])
+  }, [phase, targetRoute]) // ⚡ No setTransitionProgress dep — accessed imperatively
 
   return null
 }

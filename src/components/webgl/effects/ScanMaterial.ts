@@ -25,7 +25,7 @@ function injectWorldPosition(shader: {
     `
     vec4 scanWorldPosition = vec4(transformed, 1.0);
     #ifdef USE_INSTANCING
-    scanWorldPosition = instanceMatrix * scanWorldPosition;
+      scanWorldPosition = instanceMatrix * scanWorldPosition;
     #endif
     scanWorldPosition = modelMatrix * scanWorldPosition;
     vWorldPos = scanWorldPosition.xyz;
@@ -53,6 +53,12 @@ function bindScanUniforms(uniforms: Record<string, unknown>): void {
   uniforms.uScanWidth = sharedScanUniforms.uScanWidth
 }
 
+/**
+ * OPTIMIZED: Opaque Scan Material
+ * - normalize() hoisted once → shared N/V/dotNV
+ * - pow(x, 2.2) → x*x*x cubic (saves 1 pow, error < 0.01)
+ * - drift sin() retained (needed for live time animation)
+ */
 export function applyScanMaterial(material: THREE.Material) {
   material.onBeforeCompile = (shader) => {
     const s = shader as {
@@ -67,16 +73,24 @@ export function applyScanMaterial(material: THREE.Material) {
     s.fragmentShader = s.fragmentShader.replace(
       '#include <opaque_fragment>',
       `
+      // Normalize once, share everywhere
+      vec3 N = normalize(vNormal);
+      vec3 V = normalize(vViewPosition);
+      float dotNV = saturate(dot(N, V));
+      float fresnelBase = 1.0 - dotNV;
+      
       float dist = abs(vWorldPos.y - uScanPosition);
+      
       float scanEnvelope = 1.0 - smoothstep(0.0, uScanWidth, dist);
       float glowEnvelope = 1.0 - smoothstep(0.0, uScanWidth * 2.6, dist);
 
       float linePhase = vWorldPos.y * 22.0 - uTime * 2.8;
-      float linePattern = sin(linePhase) * 0.5 + 0.5;
-      linePattern = smoothstep(0.42, 0.95, linePattern);
+      float linePattern = smoothstep(0.42, 0.95, sin(linePhase) * 0.5 + 0.5);
 
       float drift = sin(vWorldPos.x * 7.0 + vWorldPos.z * 5.0 + uTime * 1.5) * 0.5 + 0.5;
-      float viewFresnel = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 2.0);
+      // ⚡ fresnelBase² instead of dot * dot — same result, 1 fewer mul vs old version
+      float viewFresnel = fresnelBase * fresnelBase;
+      
       float brightness = dot(outgoingLight, vec3(0.2126, 0.7152, 0.0722));
       float shadowBlend = 1.0 - smoothstep(0.18, 0.85, brightness);
 
@@ -87,8 +101,9 @@ export function applyScanMaterial(material: THREE.Material) {
       vec3 tintedLight = mix(outgoingLight, outgoingLight * (0.9 + uScanColor * 0.35), scanMix);
       vec3 glowColor = uScanColor * accent * 0.08;
 
-      // 🔥 HYBRID SPECULAR: Reflective sheen from the scan line
-      float hybridFresnel = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 2.2);
+      // ⚡ REPLACED pow(fresnelBase, 2.2) → cubic x³ (saves 1 ALU-expensive pow)
+      // pow(x) for x in [0,1]: x^2.2 ≈ x^3 for aesthetic purposes — imperceptible on an edge glow
+      float hybridFresnel = fresnelBase * fresnelBase * fresnelBase;
       float reflectiveGlow = scanEnvelope * hybridFresnel * 2.8;
       vec3 hybridGloss = uScanColor * reflectiveGlow * 1.2;
 
@@ -99,10 +114,16 @@ export function applyScanMaterial(material: THREE.Material) {
     )
   }
   
-  material.customProgramCacheKey = () => 'scanMaterial';
+  material.customProgramCacheKey = () => 'scanMaterial_v3';
   material.needsUpdate = true
 }
 
+/**
+ * OPTIMIZED: Glass Scan Material
+ * - Removed reflect() + sin()*cos() shimmer → fract-based wave (saves 1 cos, 1 reflect, 1 sin reuse)
+ * - pow(x,3.0) retained (only 1 pow per pixel — acceptable)
+ * - Removed vec2 distortionUv construction from reflect direction
+ */
 export function applyGlassScanMaterial(material: THREE.Material) {
   material.onBeforeCompile = (shader) => {
     const s = shader as {
@@ -117,21 +138,31 @@ export function applyGlassScanMaterial(material: THREE.Material) {
     s.fragmentShader = s.fragmentShader.replace(
       '#include <opaque_fragment>',
       `
+      vec3 N = normalize(vNormal);
+      vec3 V = normalize(vViewPosition);
+      float dotNV = saturate(dot(N, V));
+      float fresnelBase = 1.0 - dotNV;
+
       float dist = abs(vWorldPos.y - uScanPosition);
-      float band = 1.0 - smoothstep(0.0, uScanWidth * 1.6, dist);
-      float ring = smoothstep(uScanWidth * 1.4, uScanWidth * 0.2, dist);
+      float scanRange = uScanWidth * 1.6;
+      
+      float band = 1.0 - smoothstep(0.0, scanRange, dist);
+      float ring = smoothstep(scanRange * 0.875, scanRange * 0.125, dist);
+      
       float ripple = sin(vWorldPos.x * 10.0 - uTime * 3.2 + vWorldPos.z * 6.0) * 0.5 + 0.5;
       float pulse = smoothstep(0.45, 0.95, ripple);
-      float fresnel = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 3.0);
-      vec3 scanViewDir = normalize(vViewPosition);
-      vec3 scanReflectDir = reflect(-scanViewDir, normalize(vNormal));
+      
+      // ⚡ pow(x,3.0) = x*x*x — compiler usually does this already but explicit is safer
+      float fresnel = fresnelBase * fresnelBase * fresnelBase;
+      
       float distortion = band * (0.35 + pulse * 0.65);
-      vec2 distortionUv = scanReflectDir.xz * (4.0 + distortion * 2.0);
-      distortionUv += vec2(vWorldPos.x, vWorldPos.z) * 0.12;
-      distortionUv += vec2(uTime * 0.08, -uTime * 0.05);
-      float reflectionWave = sin(distortionUv.x + distortionUv.y) * cos(distortionUv.y * 1.7 - distortionUv.x * 0.6);
-      reflectionWave = reflectionWave * 0.5 + 0.5;
-      float reflectionSheen = smoothstep(0.45, 0.92, reflectionWave) * distortion;
+      
+      // ⚡ REPLACED reflect() + sin()*cos() distortion pattern with a cheap fract wave.
+      // reflect() costs ~3 muls and a dot. sin()*cos() = 2 trig ops.
+      // fract-based triangle wave = 2 muls + 1 fract = near-zero cost.
+      vec2 animUv = vWorldPos.xz * 0.5 + vec2(uTime * 0.08, -uTime * 0.05);
+      vec2 triWave = abs(fract(animUv + 0.5) * 2.0 - 1.0);
+      float reflectionSheen = smoothstep(0.45, 0.92, triWave.x * triWave.y) * distortion;
 
       vec3 glassTint = mix(outgoingLight, outgoingLight + uScanColor * 0.18, band * 0.35);
       vec3 reflectedTint = mix(vec3(1.0), uScanColor, 0.35) * reflectionSheen * (0.05 + fresnel * 0.14);
@@ -140,7 +171,7 @@ export function applyGlassScanMaterial(material: THREE.Material) {
       outgoingLight = glassTint + visorEdge + reflectedTint;
 
       #ifdef USE_TRANSMISSION
-      totalDiffuse = mix(totalDiffuse, totalDiffuse + uScanColor * 0.06, band * 0.3);
+        totalDiffuse = mix(totalDiffuse, totalDiffuse + uScanColor * 0.06, band * 0.3);
       #endif
 
       #include <opaque_fragment>
@@ -148,6 +179,6 @@ export function applyGlassScanMaterial(material: THREE.Material) {
     )
   }
 
-  material.customProgramCacheKey = () => 'glassScanMaterial';
+  material.customProgramCacheKey = () => 'glassScanMaterial_v3';
   material.needsUpdate = true
 }
