@@ -3,6 +3,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
+import { Stats } from '@react-three/drei'
 import * as THREE from 'three'
 
 import { Model } from './assets/Model'
@@ -20,8 +21,6 @@ import {
 } from '@/lib/animation-mapper'
 
 function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<TernaryEffect | null> }) {
-  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
-  const transitionProgress = useOrchestratorStore((state) => state.transitionProgress)
   const phase = useTransitionStore((state) => state.phase)
   const { camera } = useThree()
 
@@ -29,6 +28,9 @@ function SceneOrchestrator({ ternaryRef }: { ternaryRef: React.RefObject<Ternary
   const tempLookAt = useMemo(() => new THREE.Vector3(), [])
 
   useFrame(() => {
+    // 🔥 Optimization: Direct state access from store to avoid React re-renders
+    const { scrollProgress, transitionProgress } = useOrchestratorStore.getState()
+
     // 1. Deterministic Camera Mapping
     getMappedCameraPosition(scrollProgress, tempVec)
     getMappedLookAt(scrollProgress, tempLookAt)
@@ -54,35 +56,45 @@ function CinematicLighting() {
   const fillLight = useRef<THREE.PointLight>(null)
   const target = useRef<THREE.Object3D>(null)
 
+  const prevPos = useRef(new THREE.Vector3())
+  const EPSILON = 0.01
+
   useFrame((state) => {
     if (!keyLight.current || !rimLight.current || !fillLight.current || !target.current) return
 
-    const t = state.clock.elapsedTime
     const cx = state.camera.position.x
     const cz = state.camera.position.z
-    const angle = Math.atan2(cz, cx)
-    const back = angle + Math.PI
+    
+    // 🔥 Optimization: Only update if camera moved significantly or clock progressed
+    const moved = Math.abs(prevPos.current.x - cx) > EPSILON || Math.abs(prevPos.current.z - cz) > EPSILON
+    const t = state.clock.elapsedTime
+    
+    if (moved || (t % 0.1 < 0.02)) { // Throttled updates for time-based flickering
+      const angle = Math.atan2(cz, cx)
+      const back = angle + Math.PI
 
-    keyLight.current.position.set(
-      Math.cos(back - 0.5) * 6,
-      3 + Math.sin(t * 0.3) * 0.8,
-      Math.sin(back - 0.5) * 6
-    )
-    keyLight.current.target = target.current
+      keyLight.current.position.set(
+        Math.cos(back - 0.5) * 6,
+        3 + Math.sin(t * 0.3) * 0.8,
+        Math.sin(back - 0.5) * 6
+      )
+      keyLight.current.target = target.current
 
-    rimLight.current.position.set(
-      Math.cos(back + 0.5) * 5,
-      1.5,
-      Math.sin(back + 0.5) * 5
-    )
+      rimLight.current.position.set(
+        Math.cos(back + 0.5) * 5,
+        1.5,
+        Math.sin(back + 0.5) * 5
+      )
 
-    fillLight.current.position.set(
-      Math.cos(back) * 3,
-      -1.5,
-      Math.sin(back) * 3
-    )
+      fillLight.current.position.set(
+        Math.cos(back) * 3,
+        -1.5,
+        Math.sin(back) * 3
+      )
 
-    keyLight.current.intensity = 1.8 + Math.sin(t * 16) * 0.05
+      keyLight.current.intensity = 1.8 + Math.sin(t * 16) * 0.05
+      prevPos.current.set(cx, 0, cz)
+    }
   })
 
   return (
@@ -111,6 +123,7 @@ export default function Canvas() {
       <CinematicLighting />
       <Model />
 
+      <Stats />
       <EffectComposer multisampling={0}>
         <SignalProcessor />
         <TernaryPass ref={ternaryRef} threshold={0.25} debug={0} />

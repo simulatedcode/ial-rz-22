@@ -14,119 +14,117 @@ import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 import {
   getMappedModelRotation,
   getMappedModelY,
+  getMappedModelX,
   getMappedScanPosition
 } from '@/lib/animation-mapper'
 
-const MATERIAL_MAP_KEYS = [
-  'map',
-  'normalMap',
-  'roughnessMap',
-  'metalnessMap',
-  'emissiveMap',
-  'aoMap',
-] as const
-
-type MaterialMapKey = (typeof MATERIAL_MAP_KEYS)[number]
-
-type ScanReadyMaterial = THREE.MeshPhysicalMaterial & Partial<Record<MaterialMapKey, THREE.Texture | null>>
-
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
-  const modelScene = useMemo(() => scene.clone(true), [scene])
-  const envMapTexture = useTexture('/images/panorama.png')
-  const envMap = useMemo(() => {
-    const texture = envMapTexture.clone()
-
-    texture.mapping = THREE.EquirectangularReflectionMapping
-    texture.colorSpace = THREE.SRGBColorSpace
-    texture.needsUpdate = true
-
-    return texture
-  }, [envMapTexture])
 
   const groupRef = useRef<THREE.Group>(null)
-  const primitiveRef = useRef<THREE.Group>(null)
-  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
+  const modelRef = useRef<THREE.Group>(null)
 
+  /* =========================
+     🌍 ENV (NO CLONE)
+  ========================= */
+  const envMap = useTexture('/images/panorama.png')
+  envMap.mapping = THREE.EquirectangularReflectionMapping
+  envMap.colorSpace = THREE.SRGBColorSpace
+
+  /* =========================
+     ⚡ CLONE MATERIALS ONLY
+  ========================= */
+  const modelScene = useMemo(() => {
+    const cloned = scene.clone()
+
+    cloned.traverse((child: any) => {
+      if (!child.isMesh) return
+
+      child.material = child.material.clone()
+
+      // disable heavy stuff
+      child.castShadow = false
+      child.receiveShadow = false
+    })
+
+    return cloned
+  }, [scene])
+
+  /* =========================
+     🎯 AUTO CENTER (STABLE)
+  ========================= */
   useLayoutEffect(() => {
-    if (!modelScene) return
+    if (!modelRef.current) return
 
-    modelScene.traverse((child) => {
-      if (!(child instanceof THREE.Mesh)) return
+    const box = new THREE.Box3().setFromObject(modelRef.current)
+    const center = new THREE.Vector3()
+    box.getCenter(center)
 
-      // 🔥 Optimization: Basic mesh setup
-      child.castShadow = true
-      child.receiveShadow = true
+    modelRef.current.position.sub(center)
+  }, [])
 
-      const mat = child.material as ScanReadyMaterial
-      if (!mat) return
+  /* =========================
+     🎨 MATERIAL PIPELINE
+  ========================= */
+  useLayoutEffect(() => {
+    modelScene.traverse((child: any) => {
+      if (!child.isMesh) return
 
-      // 🔥 Optimization: Only process each material instance once
-      if (!mat.userData.isProcessed) {
-        // Correct texture settings for GLTF standards if missing
-        MATERIAL_MAP_KEYS.forEach((mapName) => {
-          const texture = mat[mapName]
-          if (texture && texture instanceof THREE.Texture) {
-            texture.flipY = false
-            texture.colorSpace = (mapName === 'map' || mapName === 'emissiveMap')
-              ? THREE.SRGBColorSpace
-              : THREE.NoColorSpace
-          }
-        })
+      const mat = child.material
+      if (!mat || mat.userData.processed) return
 
-        // 🔥 loading original texture & material properties
-        // We detect "glass" or "chrome" parts to apply specific scan logic
-        const isGlass = mat.transmission > 0 || mat.transparent || mat.opacity < 1
+      // minimal fix only
+      if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace
 
-        if (isGlass) {
-          applyGlassScanMaterial(mat)
-          child.renderOrder = 10
-        } else {
-          applyScanMaterial(mat)
-        }
+      const isGlass =
+        mat.transmission > 0 || mat.transparent || mat.opacity < 1
 
-        mat.userData.isProcessed = true
+      if (isGlass) {
+        applyGlassScanMaterial(mat)
+        child.renderOrder = 10
+      } else {
+        applyScanMaterial(mat)
       }
+
+      mat.userData.processed = true
     })
   }, [modelScene])
 
-  useLayoutEffect(() => {
-    if (!primitiveRef.current) return
-
-    primitiveRef.current.position.set(0, 0, 0)
-    primitiveRef.current.updateMatrixWorld(true)
-
-    const box = new THREE.Box3().setFromObject(primitiveRef.current)
-    const center = box.getCenter(new THREE.Vector3())
-
-    primitiveRef.current.position.copy(center.multiplyScalar(-1))
-  }, [modelScene])
-
+  /* =========================
+     🎬 ANIMATION
+  ========================= */
   useFrame((state) => {
+    const scroll = useOrchestratorStore.getState().scrollProgress
+
     sharedScanUniforms.uTime.value = state.clock.elapsedTime
 
     if (groupRef.current) {
       groupRef.current.rotation.y =
-        getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
+        getMappedModelRotation(scroll, state.clock.elapsedTime)
 
       groupRef.current.position.y =
-        getMappedModelY(scrollProgress)
+        getMappedModelY(scroll)
+
+      groupRef.current.position.x =
+        getMappedModelX(scroll)
 
       sharedScanUniforms.uScanPosition.value =
-        getMappedScanPosition(scrollProgress)
+        getMappedScanPosition(scroll)
     }
   })
 
   return (
     <>
-      <Environment map={envMap} background={false} environmentIntensity={0.15} />
+      <Environment map={envMap} environmentIntensity={0.2} />
 
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[3, 3, 3]} intensity={0.18} />
-      <directionalLight position={[-3, -2, -3]} intensity={0.46} />
+      {/* minimal lighting */}
+      <ambientLight intensity={0.3} />
+      <directionalLight position={[3, 3, 3]} intensity={0.4} />
 
       <group ref={groupRef} scale={2}>
-        <primitive ref={primitiveRef} object={modelScene} />
+        <group ref={modelRef}>
+          <primitive object={modelScene} />
+        </group>
       </group>
     </>
   )

@@ -43,6 +43,7 @@ export default function RootLayout({
     >
       <body className="relative w-full min-h-screen bg-background overflow-hidden" suppressHydrationWarning>
 
+
         {/* 🔥 WebGL Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <CanvasWrapper />

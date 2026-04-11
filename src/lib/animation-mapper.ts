@@ -7,15 +7,17 @@ import * as THREE from 'three'
 export const CAMERA_CONFIG = {
   start: new THREE.Vector3(0, 0, 4.2),
   end: new THREE.Vector3(0, 0, 1.6),
-  lookAtStart: new THREE.Vector3(0, -0.98, 0),
-  lookAtEnd: new THREE.Vector3(0.3, -0.4, 0),
+  lookAtStart: new THREE.Vector3(0, 0, 0),
+  lookAtEnd: new THREE.Vector3(0, 0, 0),
 }
 
 export const MODEL_CONFIG = {
   rotationStart: 0,
   rotationEnd: Math.PI * 0.15,
+  xStart: 0,
+  xEnd: -0.3,
   yStart: 0,
-  yEnd: 0,
+  yEnd: -0.6,
   scanStart: 2.0,
   scanEnd: -2.0,
 }
@@ -41,6 +43,10 @@ export const getMappedModelRotation = (scrollProgress: number, time: number) => 
 
 export const getMappedModelY = (scrollProgress: number) => {
   return MODEL_CONFIG.yStart + (MODEL_CONFIG.yEnd - MODEL_CONFIG.yStart) * scrollProgress
+}
+
+export const getMappedModelX = (scrollProgress: number) => {
+  return MODEL_CONFIG.xStart + (MODEL_CONFIG.xEnd - MODEL_CONFIG.xStart) * scrollProgress
 }
 
 export const getMappedScanPosition = (scrollProgress: number) => {
