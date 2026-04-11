@@ -32,6 +32,7 @@ type ScanReadyMaterial = THREE.MeshPhysicalMaterial & Partial<Record<MaterialMap
 
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
+  const modelScene = useMemo(() => scene.clone(true), [scene])
   const envMapTexture = useTexture('/images/panorama.png')
   const envMap = useMemo(() => {
     const texture = envMapTexture.clone()
@@ -44,12 +45,13 @@ export function Model() {
   }, [envMapTexture])
 
   const groupRef = useRef<THREE.Group>(null)
+  const primitiveRef = useRef<THREE.Group>(null)
   const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
 
   useLayoutEffect(() => {
-    if (!scene) return
+    if (!modelScene) return
 
-    scene.traverse((child) => {
+    modelScene.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
 
       // 🔥 Optimization: Basic mesh setup
@@ -86,7 +88,19 @@ export function Model() {
         mat.userData.isProcessed = true
       }
     })
-  }, [scene])
+  }, [modelScene])
+
+  useLayoutEffect(() => {
+    if (!primitiveRef.current) return
+
+    primitiveRef.current.position.set(0, 0, 0)
+    primitiveRef.current.updateMatrixWorld(true)
+
+    const box = new THREE.Box3().setFromObject(primitiveRef.current)
+    const center = box.getCenter(new THREE.Vector3())
+
+    primitiveRef.current.position.copy(center.multiplyScalar(-1))
+  }, [modelScene])
 
   useFrame((state) => {
     sharedScanUniforms.uTime.value = state.clock.elapsedTime
@@ -105,14 +119,14 @@ export function Model() {
 
   return (
     <>
-      <Environment map={envMap} background={false} environmentIntensity={0.35} />
+      <Environment map={envMap} background={false} environmentIntensity={0.15} />
 
-      <ambientLight intensity={0.25} />
+      <ambientLight intensity={0.45} />
       <directionalLight position={[3, 3, 3]} intensity={0.18} />
       <directionalLight position={[-3, -2, -3]} intensity={0.46} />
 
-      <group ref={groupRef}>
-        <primitive object={scene} />
+      <group ref={groupRef} scale={2}>
+        <primitive ref={primitiveRef} object={modelScene} />
       </group>
     </>
   )

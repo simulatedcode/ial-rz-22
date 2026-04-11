@@ -6,16 +6,16 @@ import * as THREE from 'three'
  */
 export const CAMERA_CONFIG = {
   start: new THREE.Vector3(0, 0, 4.2),
-  end: new THREE.Vector3(0.5, 0.2, 1.8),
-  lookAtStart: new THREE.Vector3(0, 0, 0),
-  lookAtEnd: new THREE.Vector3(0.33, 0.15, 0),
+  end: new THREE.Vector3(0, 0, 1.6),
+  lookAtStart: new THREE.Vector3(0, -0.98, 0),
+  lookAtEnd: new THREE.Vector3(0.3, -0.4, 0),
 }
 
 export const MODEL_CONFIG = {
   rotationStart: 0,
-  rotationEnd: Math.PI * 0.05,
-  yStart: 0, // Adjust as needed
-  yEnd: -0.2,
+  rotationEnd: Math.PI * 0.15,
+  yStart: 0,
+  yEnd: 0,
   scanStart: 2.0,
   scanEnd: -2.0,
 }

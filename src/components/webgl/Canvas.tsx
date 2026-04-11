@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useLayoutEffect, useMemo } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import * as THREE from 'three'
@@ -96,24 +96,8 @@ function CinematicLighting() {
   )
 }
 
-function CenteredModel({ modelRef }: { modelRef: React.RefObject<THREE.Group | null> }) {
-  useLayoutEffect(() => {
-    if (!modelRef.current) return
-    const box = new THREE.Box3().setFromObject(modelRef.current)
-    const center = box.getCenter(new THREE.Vector3())
-    modelRef.current.position.sub(center)
-  }, [modelRef])
-
-  return (
-    <group ref={modelRef} scale={2}>
-      <Model />
-    </group>
-  )
-}
-
 export default function Canvas() {
   const ternaryRef = useRef<TernaryEffect>(null)
-  const modelRef = useRef<THREE.Group>(null)
 
   return (
     <>
@@ -125,7 +109,7 @@ export default function Canvas() {
 
       <SceneOrchestrator ternaryRef={ternaryRef} />
       <CinematicLighting />
-      <CenteredModel modelRef={modelRef} />
+      <Model />
 
       <EffectComposer multisampling={0}>
         <SignalProcessor />
