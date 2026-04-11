@@ -36,51 +36,44 @@ export default function Header() {
     return () => clearInterval(interval)
   }, [])
 
-  const layoutClasses = 'fixed top-0 left-0 right-0 z-100 flex items-center justify-between mx-auto max-w-full px-8 py-8'
-
-  if (!mounted) {
-    return (
-      <div className={layoutClasses}>
-        <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-          <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
-        </div>
-        <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-          <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
-        </nav>
-        <button
-          onClick={() => setIsInformationOpen(true)}
-          className='hidden sm:flex items-center font-pixel text-[10px] sm:text-xs tracking-widest uppercase text-muted-foreground hover:text-accent transition-all duration-300 cursor-pointer'
-        >
-          INFORMATION
-        </button>
-        <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-          {SITE_CONFIG.location}, --:-- {utc}
-        </div>
-      </div>
-    )
-  }
+  const layoutClasses = 'fixed inset-x-0 top-0 z-100 mx-auto max-w-full px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8'
+  const gridClasses = 'grid grid-cols-12 items-start gap-x-4 gap-y-2 sm:items-center sm:gap-y-3'
+  const textClasses = 'font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground'
+  const linkClasses = 'text-muted-foreground hover:text-accent transition-colors'
+  const infoButtonClasses = 'inline-flex items-center font-pixel text-[10px] sm:text-xs tracking-widest uppercase text-muted-foreground hover:text-accent transition-all duration-300 cursor-pointer'
+  const mobileNavClasses = 'inline-flex items-center font-pixel text-[10px] tracking-widest uppercase text-muted-foreground transition-colors hover:text-accent'
+  const displayTime = mounted ? time : '--:--'
 
   return (
     <div className={layoutClasses}>
-      <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-        <TransitionLink href="/" className="text-muted-foreground hover:text-accent transition-colors">PRZOJECT XYZ</TransitionLink>
-      </div>
-      <nav className="hidden md:flex items-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
-        <TransitionLink href="/history" className="text-muted-foreground hover:text-accent transition-colors">Data History</TransitionLink>
-      </nav>
-      <button
-        onClick={() => setIsInformationOpen(true)}
-        className='hidden sm:flex items-center font-pixel text-[10px] sm:text-xs tracking-widest uppercase text-muted-foreground hover:text-accent transition-all duration-300 cursor-pointer'
-      >
-        INFORMATION
-      </button>
+      <div className={gridClasses}>
+        <div className={`col-span-12 sm:col-span-4 md:col-span-3 text-left ${textClasses}`}>
+          <TransitionLink href="/" className={linkClasses}>PRZOJECT XYZ</TransitionLink>
+        </div>
 
-      <InformationModal
-        isOpen={isInformationOpen}
-        onClose={() => setIsInformationOpen(false)}
-      />
-      <div className="font-pixel text-[10px] sm:text-xs tracking-widest text-muted-foreground">
-        {SITE_CONFIG.location}, {time} {utc}
+        <nav className="col-span-12 flex flex-col items-start gap-2 sm:hidden">
+          <TransitionLink href="/history" className={mobileNavClasses}>Data History</TransitionLink>
+        </nav>
+
+        <nav className="hidden md:flex md:col-span-3 items-center justify-center gap-6 font-pixel text-[10px] sm:text-xs tracking-widest uppercase">
+          <TransitionLink href="/history" className={linkClasses}>Data History</TransitionLink>
+        </nav>
+
+        <button
+          onClick={() => setIsInformationOpen(true)}
+          className={`col-span-12 sm:col-span-4 md:col-span-3 justify-self-start md:justify-self-center text-left ${infoButtonClasses}`}
+        >
+          INFORMATION
+        </button>
+
+        <div className={`col-span-12 sm:col-span-4 md:col-span-3 justify-self-start text-left md:justify-self-end md:text-right ${textClasses}`}>
+          {SITE_CONFIG.location}, {displayTime} {utc}
+        </div>
+
+        <InformationModal
+          isOpen={isInformationOpen}
+          onClose={() => setIsInformationOpen(false)}
+        />
       </div>
     </div>
   )
