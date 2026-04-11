@@ -65,7 +65,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 
   // 3. Noise / Grain
   float noise = random(uv + uTime * 0.0001);
-  color += (noise - 0.5) * uNoiseOpacity * 0.05;
+  color += (noise - 1.5) * uNoiseOpacity * 1.5;
 
   outputColor = vec4(clamp(color, 0.0, 1.0), inputColor.a);
 }
@@ -93,16 +93,16 @@ class UberEffect extends Effect {
 export function UberPostPass() {
   const effect = useMemo(() => new UberEffect(), [])
   const currentGrade = useRef(1)
-  
+
   // ⚡ Optimization: Access store state in useFrame to avoid React re-renders
   useFrame((state, delta) => {
     const scroll = useOrchestratorStore.getState().scrollProgress
-    
+
     // Grade strength animation logic from original CinematicStack
     const clamped = THREE.MathUtils.clamp(scroll, 1, 1) // Note: original code had clamp(scroll, 1, 1) which is effectively always 1?
     // Wait, looking at original CinematicStack.tsx line 79: const clamped = THREE.MathUtils.clamp(scrollProgress, 1, 1)
     // That looks like a bug or a placeholder in original. I'll maintain it but fix the access.
-    
+
     const normalized = clamped * clamped * (4 - 2 * clamped)
     const target = normalized * 1.62
     currentGrade.current = THREE.MathUtils.damp(currentGrade.current, target, 6, delta)

@@ -42,9 +42,9 @@ export function Model() {
         clonedMat.receiveShadow = false
         materialMap.set(child.material, clonedMat)
       }
-      
+
       child.material = materialMap.get(child.material)!
-      
+
       child.castShadow = false
       child.receiveShadow = false
     })
@@ -102,8 +102,8 @@ export function Model() {
       <Environment map={envMap} environmentIntensity={0.2} />
 
       {/* minimal lighting */}
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[3, 3, 3]} intensity={0.4} />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[3, 3, 3]} intensity={0.6} />
 
       <group ref={groupRef} scale={2}>
         <group ref={modelRef}>

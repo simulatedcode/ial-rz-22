@@ -50,11 +50,11 @@ function CinematicLighting() {
 
     const cx = state.camera.position.x
     const cz = state.camera.position.z
-    
+
     // Only update if camera moved significantly or clock progressed
     const moved = Math.abs(prevPos.current.x - cx) > EPSILON || Math.abs(prevPos.current.z - cz) > EPSILON
     const t = state.clock.elapsedTime
-    
+
     if (moved || (t % 0.1 < 0.02)) { // Throttled updates for time-based flickering
       const angle = Math.atan2(cz, cx)
       const back = angle + Math.PI
@@ -85,10 +85,10 @@ function CinematicLighting() {
 
   return (
     <>
-      <ambientLight intensity={0.22} />
+      <ambientLight intensity={0.18} />
       <directionalLight ref={keyLight} intensity={1.85} color="#ffffff" castShadow />
       <object3D ref={target} position={[0, 0, 0]} />
-      <directionalLight ref={rimLight} intensity={2.2} color="#00ffff" />
+      <directionalLight ref={rimLight} intensity={1.6} color="#00ffff" />
       <pointLight ref={fillLight} intensity={0.6} color="#ff2a5f" />
     </>
   )
@@ -98,7 +98,7 @@ export default function Canvas() {
   return (
     <>
       <color attach="background" args={['#050810']} />
-      <fog attach="fog" args={['#050810', 5, 15]} />
+      <fog attach="fog" args={['#050810', 5, 50]} />
 
       <ScrollController />
       <TransitionController />

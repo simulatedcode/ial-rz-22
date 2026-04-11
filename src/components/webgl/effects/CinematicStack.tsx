@@ -13,7 +13,7 @@ export function CinematicStack() {
     <>
       {/* 1. Bloom remains a separate pass as it requires mipmap downsampling */}
       <Bloom
-        luminanceThreshold={1.92}
+        luminanceThreshold={1.8}
         mipmapBlur
         intensity={0.08}
       />

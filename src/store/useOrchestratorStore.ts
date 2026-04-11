@@ -4,7 +4,7 @@ interface OrchestratorState {
   // Normalized progress values (0 to 1)
   scrollProgress: number
   transitionProgress: number
-  
+
   // Actions
   setScrollProgress: (progress: number) => void
   setTransitionProgress: (progress: number) => void
@@ -17,7 +17,7 @@ export const useOrchestratorStore = create<OrchestratorState>((set) => ({
   setScrollProgress: (scrollProgress) => {
     set({ scrollProgress })
   },
-  
+
   setTransitionProgress: (transitionProgress) => {
     set({ transitionProgress })
   },

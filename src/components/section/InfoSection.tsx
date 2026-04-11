@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 const sentence = `A speculative interface exploring how memory, perception, and synthetic reality merge into a single timeline. This project blends WebGL environments with cinematic transitions to simulate fragmented futures—where what you see may not be what truly exists, but what your system chooses to remember.`
 
 export default function Info() {
@@ -13,16 +15,19 @@ export default function Info() {
             </h2>
           </div>
 
-          <div className="mt-6">
-            <p className="text-base leading-relaxed text-muted-foreground drop-shadow-[0_0_2px_var(--color-ocean-500)] sm:text-lg lg:text-xl">
+          <div className="mt-6 mb-4">
+            <p className="font-mono text-base leading-relaxed text-muted-foreground drop-shadow-[0_0_2px_var(--color-ocean-500)] lg:text-lg">
               {sentence}
             </p>
           </div>
 
-          <div className="mt-8 aspect-[4/3] max-w-xl overflow-hidden rounded-sm border border-primary/30 bg-[radial-gradient(circle_at_top,var(--color-ocean-500)/0.2,transparent_55%),linear-gradient(135deg,var(--color-background),color-mix(in_oklab,var(--color-foreground)_8%,transparent))] p-4 shadow-[0_0_30px_color-mix(in_oklab,var(--color-flame-500)_12%,transparent)]">
-            <div className="flex h-full w-full items-center justify-center border border-dashed border-accent/40 text-center font-pixel text-sm uppercase tracking-[0.3em] text-muted-foreground">
-              Placeholder 01
-            </div>
+          <div className="mt-8 aspect-video overflow-hidden rounded-sm border border-primary/30 relative">
+            <Image
+              src="/images/placeholder.jpg"
+              alt="Project preview"
+              fill
+              className="object-cover"
+            />
           </div>
         </div>
       </div>
