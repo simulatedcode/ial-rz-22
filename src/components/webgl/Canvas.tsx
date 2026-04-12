@@ -97,6 +97,8 @@ function CinematicLighting() {
   )
 }
 
+import { Stats } from '@react-three/drei'
+
 export default function Canvas() {
   return (
     <>
@@ -115,6 +117,8 @@ export default function Canvas() {
       <EffectComposer enableNormalPass multisampling={0}>
         <RetroTerminalEffect />
       </EffectComposer >
+
+      <Stats className="top-auto! bottom-4! left-4!" />
     </>
   )
 }

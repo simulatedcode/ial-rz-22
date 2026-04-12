@@ -36,8 +36,8 @@ float safeLength(vec2 v) {
 // EFFECTS
 // ==============================
 float applyWave(vec2 p, float time, float scroll) {
-  float t = time + scroll * 0.01;
-  return sin(p.x * 10.0 + t) * 0.1;
+  // Wave disabled per user request
+  return 0.0;
 }
 
 float applyGlow(vec2 p, vec2 mouse, float quality) {
