@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useTransitionStore } from '@/store/useTransitionStore'
 
 interface TransitionLinkProps {
@@ -11,7 +11,6 @@ interface TransitionLinkProps {
 }
 
 export default function TransitionLink({ href, children, className }: TransitionLinkProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const startExit = useTransitionStore((state) => state.startExit)
 

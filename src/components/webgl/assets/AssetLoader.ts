@@ -7,7 +7,7 @@ export interface AssetRegistry {
 
 export const ASSETS: AssetRegistry = {
   models: {
-    hero: '/model/scene.gltf',
+    hero: '/model/mainscene.gltf',
   },
   textures: {},
 }

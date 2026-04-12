@@ -46,7 +46,7 @@
   --color-foreground: var(--color-ocean-100);
 
   /* surfaces */
-  --color-panel: var(--color-ocean-900);
+  --color-panel: var(--color-ocean-950);
   --color-panel-foreground: var(--color-ocean-100);
 
   /* primary (brand / action) */
@@ -104,56 +104,6 @@ body {
   font-family: var(--font-pixel), monospace;
 }
 
-.crt-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: screen;
-}
-
-.crt-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.03) 0px,
-      rgba(0, 0, 0, 0.03) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-}
-
-.crt-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.2) 70%, rgba(0, 0, 0, 0.4) 100%),
-    repeating-linear-gradient(
-      0deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-  animation: crt-flicker 0.08s infinite;
-  background-blend-mode: multiply;
-}
-
-@keyframes crt-flicker {
-  0% { opacity: 0.97; }
-  5% { opacity: 0.95; }
-  10% { opacity: 0.99; }
-  15% { opacity: 0.96; }
-  20% { opacity: 0.98; }
-  50% { opacity: 0.99; }
-  55% { opacity: 0.97; }
-  60% { opacity: 0.98; }
-  100% { opacity: 0.97; }
-}
 
 /* =========================
  * 📱 RESPONSIVE LAYOUT

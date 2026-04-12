@@ -3,7 +3,6 @@ import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
 import SmoothScroll from "@/components/SmoothScroll";
-import { GlobalCRTOverlay } from "@/components/ui/GlobalCRTOverlay";
 import Header from "@/components/ui/Header";
 import CanvasWrapper from "@/components/ui/CanvasWrapper";
 
@@ -31,6 +30,8 @@ export const metadata: Metadata = {
   description: "Speculative Future Memories",
 };
 
+import CRTOverlay from "@/components/ui/CRTOverlay";
+
 export default function RootLayout({
   children,
 }: {
@@ -41,8 +42,7 @@ export default function RootLayout({
       lang="en"
       className={`${ibmSans.variable} ${ibmMono.variable} ${pixelFont.variable}`}
     >
-      <body className="relative w-full min-h-screen bg-background overflow-hidden" suppressHydrationWarning>
-
+      <body className="relative w-full min-h-screen bg-background overflow-x-hidden" suppressHydrationWarning>
         {/* 🔥 WebGL Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <CanvasWrapper />
@@ -52,10 +52,10 @@ export default function RootLayout({
         <main className="relative z-10 w-full min-h-screen">
           <Header />
           <SmoothScroll>{children}</SmoothScroll>
-
-          {/* 🎨 CRT Overlay */}
-          <GlobalCRTOverlay />
         </main>
+
+        {/* 📺 Screen Layer (Covers both WebGL and UI) */}
+        <CRTOverlay />
       </body>
     </html>
   );

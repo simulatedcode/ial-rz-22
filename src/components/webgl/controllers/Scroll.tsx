@@ -8,8 +8,6 @@ import { useOrchestratorStore } from '@/store/useOrchestratorStore'
 gsap.registerPlugin(ScrollTrigger)
 
 export function ScrollController() {
-  const setScrollProgress = useOrchestratorStore((state) => state.setScrollProgress)
-
   useLayoutEffect(() => {
     const hero = document.querySelector('#hero')
     if (!hero) return
@@ -21,7 +19,12 @@ export function ScrollController() {
         end: 'bottom top',
         scrub: 1.2,
         onUpdate: (self) => {
-          setScrollProgress(self.progress)
+          // ⚡ Access setter imperatively via getState() instead of a React selector.
+          // The original pattern (useOrchestratorStore selector in the component) creates
+          // a Zustand subscription that causes React to track this component.
+          // setScrollProgress is called 60x/sec during scroll — this keeps it
+          // entirely outside the React render cycle.
+          useOrchestratorStore.getState().setScrollProgress(self.progress)
         },
       },
     })
@@ -32,7 +35,7 @@ export function ScrollController() {
       timeline.kill()
       ScrollTrigger.getAll().forEach(t => t.kill())
     }
-  }, [setScrollProgress])
+  }, []) // ⚡ No deps — getState() is stable, no re-run needed
 
   return null
 }

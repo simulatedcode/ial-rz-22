@@ -1,121 +1,116 @@
 'use client'
 
-import { useGLTF } from '@react-three/drei'
+import { Environment, useGLTF, useTexture } from '@react-three/drei'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ASSETS } from './AssetLoader'
-import { applyScanMaterial, sharedScanUniforms } from '../effects/ScanMaterial'
 import { useOrchestratorStore } from '@/store/useOrchestratorStore'
-import { 
-  getMappedModelRotation, 
-  getMappedModelY, 
-  getMappedScanPosition 
+import {
+  getMappedModelRotation,
+  getMappedModelY,
+  getMappedModelX
 } from '@/lib/animation-mapper'
 
 export function Model() {
   const { scene } = useGLTF(ASSETS.models.hero)
+
   const groupRef = useRef<THREE.Group>(null)
-  const modelScene = useMemo(() => scene.clone(true), [scene])
-  
-  const scrollProgress = useOrchestratorStore((state) => state.scrollProgress)
+  const modelRef = useRef<THREE.Group>(null)
 
-  useLayoutEffect(() => {
-    if (!groupRef.current) return
+  /* =========================
+     🌍 ENV (NO CLONE)
+  ========================= */
+  const envMap = useTexture('/images/panorama.png')
+  envMap.mapping = THREE.EquirectangularReflectionMapping
+  envMap.colorSpace = THREE.SRGBColorSpace
 
-    groupRef.current.visible = false
+  /* =========================
+     ⚡ CLONE MATERIALS ONLY
+  ========================= */
+  const modelScene = useMemo(() => {
+    const cloned = scene.clone()
+    const materialMap = new Map<THREE.Material, THREE.Material>()
 
-    const materialCache = new Map<string, THREE.MeshPhysicalMaterial>()
+    cloned.traverse((child: any) => {
+      if (!child.isMesh) return
 
-    groupRef.current.traverse((child) => {
-      if (!(child instanceof THREE.Mesh)) return
-
-      child.matrixAutoUpdate = false
-      child.updateMatrix()
-
-      child.castShadow = true
-      child.receiveShadow = true
-
-      const oldMat = child.material as THREE.MeshStandardMaterial
-      if (!oldMat) return
-
-      if (oldMat.map) {
-        oldMat.map.flipY = false
-        oldMat.map.colorSpace = THREE.SRGBColorSpace
+      // Reuse materials instead of cloning per-mesh for performance
+      if (!materialMap.has(child.material)) {
+        const clonedMat = child.material.clone()
+        clonedMat.castShadow = false
+        clonedMat.receiveShadow = false
+        materialMap.set(child.material, clonedMat)
       }
 
-      if (materialCache.has(oldMat.uuid)) {
-        child.material = materialCache.get(oldMat.uuid)!
-        return
-      }
+      child.material = materialMap.get(child.material)!
 
-      let newMat: THREE.MeshPhysicalMaterial
-
-      const isGlass =
-        'transmission' in oldMat &&
-        (oldMat as THREE.MeshPhysicalMaterial).transmission > 0
-
-      if (isGlass) {
-        newMat = new THREE.MeshPhysicalMaterial({
-          map: oldMat.map || null,
-          transparent: true,
-          opacity: 1,
-          roughness: oldMat.roughness ?? 0.02,
-          metalness: 0,
-          transmission: 1,
-          thickness: 0.25,
-          ior: 1.45,
-          clearcoat: 0.8,
-          clearcoatRoughness: 0.15,
-          envMapIntensity: 1.5,
-          depthWrite: false,
-        })
-
-        newMat.attenuationColor = new THREE.Color('#F88863')
-        newMat.attenuationDistance = 0.5
-        newMat.userData.isGlass = true
-        child.renderOrder = 10
-      } else {
-        newMat = new THREE.MeshPhysicalMaterial({
-          map: oldMat.map || null,
-          normalMap: oldMat.normalMap || null,
-          roughnessMap: oldMat.roughnessMap || null,
-          metalnessMap: oldMat.metalnessMap || null,
-          color: '#ffffff',
-          roughness: 0.2,
-          metalness: 0.0,
-          clearcoat: 0.5,
-          clearcoatRoughness: 0.15,
-          transmission: 0.0,
-          transparent: false,
-          envMapIntensity: 1.2,
-        })
-
-        applyScanMaterial(newMat)
-      }
-
-      newMat.needsUpdate = true
-      child.material = newMat
-      materialCache.set(oldMat.uuid, newMat)
+      child.castShadow = false
+      child.receiveShadow = false
     })
 
-    groupRef.current.visible = true
+    return cloned
+  }, [scene])
+
+  /* =========================
+     🎯 AUTO CENTER (STABLE)
+  ========================= */
+  useLayoutEffect(() => {
+    if (!modelRef.current) return
+
+    const box = new THREE.Box3().setFromObject(modelRef.current)
+    const center = new THREE.Vector3()
+    box.getCenter(center)
+
+    modelRef.current.position.sub(center)
+  }, [])
+
+  /* =========================
+     🎨 MATERIAL PIPELINE (REMOVED SHADERS)
+  ========================= */
+  useLayoutEffect(() => {
+    modelScene.traverse((child: any) => {
+      if (!child.isMesh) return
+      const mat = child.material
+      if (!mat) return
+
+      // Ensure correct color space for textures
+      if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace
+    })
   }, [modelScene])
 
+  /* =========================
+     🎬 ANIMATION
+  ========================= */
   useFrame((state) => {
-    sharedScanUniforms.uTime.value = state.clock.elapsedTime
+    const scroll = useOrchestratorStore.getState().scrollProgress
 
     if (groupRef.current) {
-      groupRef.current.rotation.y = getMappedModelRotation(scrollProgress, state.clock.elapsedTime)
-      groupRef.current.position.y = getMappedModelY(scrollProgress)
-      sharedScanUniforms.uScanPosition.value = getMappedScanPosition(scrollProgress)
+      groupRef.current.rotation.y =
+        getMappedModelRotation(scroll, state.clock.elapsedTime)
+
+      groupRef.current.position.y =
+        getMappedModelY(scroll)
+
+      groupRef.current.position.x =
+        getMappedModelX(scroll)
     }
   })
 
   return (
-    <group ref={groupRef} scale={1}>
-      <primitive object={modelScene} />
-    </group>
+    <>
+      <Environment map={envMap} environmentIntensity={0.2} />
+
+      {/* minimal lighting */}
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[3, 3, 3]} intensity={0.6} />
+
+      <group ref={groupRef} scale={2}>
+        <group ref={modelRef}>
+          <primitive object={modelScene} />
+        </group>
+      </group>
+    </>
   )
 }
 

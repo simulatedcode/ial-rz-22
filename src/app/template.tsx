@@ -47,11 +47,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
     const tl = timelineRegistry.createEnterTimeline(
       () => {
         startEnter()
-        console.log('Starting Entrance Animation...')
       },
       () => {
         setIdle()
-        console.log('Entrance Animation Complete')
       }
     )
 
