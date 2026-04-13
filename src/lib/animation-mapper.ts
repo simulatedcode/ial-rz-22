@@ -4,22 +4,87 @@ import * as THREE from 'three'
  * ANIMATION CONFIGURATION
  * Centralizes all keyframe values in one place
  */
+
+// Explicit scroll progress breakpoints for each section due to uneven physical scrolling distance.
+// Section 1: Hero (progress 0.0)
+// Section 2: Info (progress 0.333)
+// Section 3: Pmem (progress 1.0)
+export const PROGRESS_BREAKPOINTS = [0.0, 0.333, 1.0];
+
 export const CAMERA_CONFIG = {
-  start: new THREE.Vector3(0, 0, 4.2),
-  end: new THREE.Vector3(0, 0, 1.6),
-  lookAtStart: new THREE.Vector3(0, 0, 0),
-  lookAtEnd: new THREE.Vector3(0, 0, 0),
+  // Waypoints for [Section 1, Section 2, Section 3]
+  points: [
+    new THREE.Vector3(0, 0, 4.2),  // Section 1: Hero
+    new THREE.Vector3(0, 0, 1.6),  // Section 2: Info
+    new THREE.Vector3(0, 0, 0.85),  // Section 3: Pmem (Zoom relatively close)
+  ],
+  lookAt: [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+  ]
 }
 
 export const MODEL_CONFIG = {
-  rotationStart: 0,
-  rotationEnd: Math.PI * 0.15,
-  xStart: 0,
-  xEnd: -0.3,
-  yStart: 0,
-  yEnd: -0.6,
-  scanStart: 2.0,
-  scanEnd: -2.0,
+  rotation: [0, Math.PI * 0.15, Math.PI * 0.3], // Keep rotating
+  x: [0, -0.3, 0], // Center -> Left -> Center
+  y: [0, -0.6, -0.85], // Center -> Down -> Pulled down
+  scan: [2.0, -2.0, -2.0], // Scan down, then stay out of view
+}
+
+// Helper to interpolate array of numbers with exact progress breakpoints + smooth easing
+function lerpArray(arr: number[], progress: number): number {
+  if (arr.length === 0) return 0;
+  if (arr.length === 1) return arr[0];
+
+  let i = 0;
+  while (i < PROGRESS_BREAKPOINTS.length - 1 && progress > PROGRESS_BREAKPOINTS[i + 1]) {
+    i++;
+  }
+
+  if (i >= arr.length - 1) return arr[arr.length - 1];
+  if (progress <= PROGRESS_BREAKPOINTS[0]) return arr[0];
+
+  const p0 = PROGRESS_BREAKPOINTS[i];
+  const p1 = PROGRESS_BREAKPOINTS[i + 1];
+  let t = (progress - p0) / (p1 - p0);
+
+  // Smoothstep easing to prevent sharp direction changes ("bouncing")
+  t = t * t * (3 - 2 * t);
+
+  return arr[i] + (arr[i + 1] - arr[i]) * t;
+}
+
+// Helper to interpolate array of Vector3 with exact progress breakpoints + smooth easing
+function lerpVectorArray(arr: THREE.Vector3[], progress: number, out: THREE.Vector3) {
+  if (arr.length === 0) return;
+  if (arr.length === 1) {
+    out.copy(arr[0]);
+    return;
+  }
+
+  let i = 0;
+  while (i < PROGRESS_BREAKPOINTS.length - 1 && progress > PROGRESS_BREAKPOINTS[i + 1]) {
+    i++;
+  }
+
+  if (i >= arr.length - 1) {
+    out.copy(arr[arr.length - 1]);
+    return;
+  }
+  if (progress <= PROGRESS_BREAKPOINTS[0]) {
+    out.copy(arr[0]);
+    return;
+  }
+
+  const p0 = PROGRESS_BREAKPOINTS[i];
+  const p1 = PROGRESS_BREAKPOINTS[i + 1];
+  let t = (progress - p0) / (p1 - p0);
+
+  // Smoothstep easing to prevent sharp direction changes ("bouncing")
+  t = t * t * (3 - 2 * t);
+
+  out.lerpVectors(arr[i], arr[i + 1], t);
 }
 
 /**
@@ -28,29 +93,29 @@ export const MODEL_CONFIG = {
  */
 
 export const getMappedCameraPosition = (scrollProgress: number, out: THREE.Vector3) => {
-  out.lerpVectors(CAMERA_CONFIG.start, CAMERA_CONFIG.end, scrollProgress)
+  lerpVectorArray(CAMERA_CONFIG.points, scrollProgress, out);
 }
 
 export const getMappedLookAt = (scrollProgress: number, out: THREE.Vector3) => {
-  out.lerpVectors(CAMERA_CONFIG.lookAtStart, CAMERA_CONFIG.lookAtEnd, scrollProgress)
+  lerpVectorArray(CAMERA_CONFIG.lookAt, scrollProgress, out);
 }
 
 export const getMappedModelRotation = (scrollProgress: number, time: number) => {
-  const baseRotation = MODEL_CONFIG.rotationStart + (MODEL_CONFIG.rotationEnd - MODEL_CONFIG.rotationStart) * scrollProgress
+  const baseRotation = lerpArray(MODEL_CONFIG.rotation, scrollProgress);
   const autoRotation = time * 0.15 // Consistent slow spin
   return baseRotation + autoRotation
 }
 
 export const getMappedModelY = (scrollProgress: number) => {
-  return MODEL_CONFIG.yStart + (MODEL_CONFIG.yEnd - MODEL_CONFIG.yStart) * scrollProgress
+  return lerpArray(MODEL_CONFIG.y, scrollProgress);
 }
 
 export const getMappedModelX = (scrollProgress: number) => {
-  return MODEL_CONFIG.xStart + (MODEL_CONFIG.xEnd - MODEL_CONFIG.xStart) * scrollProgress
+  return lerpArray(MODEL_CONFIG.x, scrollProgress);
 }
 
 export const getMappedScanPosition = (scrollProgress: number) => {
-  return MODEL_CONFIG.scanStart + (MODEL_CONFIG.scanEnd - MODEL_CONFIG.scanStart) * scrollProgress
+  return lerpArray(MODEL_CONFIG.scan, scrollProgress);
 }
 
 /**

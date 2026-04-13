@@ -9,14 +9,11 @@ gsap.registerPlugin(ScrollTrigger)
 
 export function ScrollController() {
   useLayoutEffect(() => {
-    const hero = document.querySelector('#hero')
-    if (!hero) return
-
     const timeline = gsap.to({}, {
       scrollTrigger: {
-        trigger: hero,
+        trigger: document.documentElement,
         start: 'top top',
-        end: 'bottom top',
+        end: 'bottom bottom',
         scrub: 1.2,
         onUpdate: (self) => {
           // ⚡ Access setter imperatively via getState() instead of a React selector.
