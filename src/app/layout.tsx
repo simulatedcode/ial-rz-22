@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import SmoothScroll from "@/components/SmoothScroll";
 import Header from "@/components/ui/Header";
@@ -56,6 +57,7 @@ export default function RootLayout({
 
         {/* 📺 Screen Layer (Covers both WebGL and UI) */}
         <CRTOverlay />
+        <SpeedInsights />
       </body>
     </html>
   );
